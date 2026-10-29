@@ -76,6 +76,21 @@ function renderSupport(src) {
   return body.replace(/(<\/h1>)/, `$1\n${tocHtml}`);
 }
 
+// Images locales intégrées en data URI : le HTML et le PDF restent autonomes.
+// Une image absente est retirée (on peut écrire le texte avant de faire les captures).
+const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml' };
+function inlineImages(html, baseDir) {
+  return html.replace(/<img src="([^":]+)"([^>]*)>/g, (tag, src, rest) => {
+    const path = join(baseDir, decodeURI(src));
+    const mime = MIME[src.split('.').pop().toLowerCase()];
+    if (!mime || !existsSync(path)) {
+      console.log(`         image absente, ignorée : ${src}`);
+      return '';
+    }
+    return `<img src="data:${mime};base64,${readFileSync(path).toString('base64')}"${rest}>`;
+  });
+}
+
 const supportCss = readFileSync(join(root, 'tools/support.css'), 'utf8');
 const hljsCss = readFileSync(join(root, 'tools/node_modules/highlight.js/styles/github.css'), 'utf8');
 const supportFiles = mdFiles(join(root, 'cours/supports'));
@@ -94,7 +109,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
 <style>${hljsCss}\n${supportCss}</style></head>
-<body><main>${renderSupport(src)}</main></body></html>`;
+<body><main>${inlineImages(renderSupport(src), dirname(file))}</main></body></html>`;
     const htmlPath = join(out, 'supports', 'html', `${name}.html`);
     mkdirSync(dirname(htmlPath), { recursive: true });
     writeFileSync(htmlPath, html);

@@ -2,11 +2,193 @@
 
 > **Objectifs** : AA1 — Écrire, compiler et exécuter un programme Java (types, conditions, boucles, méthodes), puis le construire et le tester avec Maven et JUnit.
 > **Prérequis** : aucun en Java. Avoir déjà écrit un algorithme simple (une boucle, une condition) dans n'importe quel langage aide. Installer le **JDK 25** et **Maven 3.9** (ou plus récent) avant la séance.
-> **Comment lire ce support** : 🟢 indispensable · 🔵 pour approfondir · 🟣 bonus · 🔒 sécurité
+> **Comment lire ce support** : 🟢 indispensable · 🔵 pour approfondir · 🟣 bonus · 🔒 sécurité · 🛠️ atelier, à faire sur votre machine
 
 Ce support accompagne les slides de la séance 1. Il contient tout ce qui a été dit en cours, avec plus de détails, des exemples complets que vous pouvez copier et exécuter, et des défis 🟣 pour celles et ceux qui connaissent déjà Java.
 
+**Deux parcours.** Vous découvrez Java ? Installez votre poste (partie 0), puis faites l'atelier **🛠️ À vous** qui termine chaque partie : c'est en tapant et en exécutant le code qu'on apprend. Gardez l'annexe B (les erreurs fréquentes) et l'annexe C (pense-bête Python et C) sous la main. Vous connaissez déjà Java ? Survolez les parties 1 à 5, faites l'atelier du §5.8, puis passez à la partie 6 : ce qui a changé depuis Java 8 (§6.7), ce qui se passe sous le capot (§6.8) et des défis.
+
 **Une convention pour toute la séance.** Nous ne manipulons pas encore d'objets. Pour représenter un prix, nous utilisons donc un **entier en centimes** : `1250` signifie 12,50 €. C'est un choix volontaire et temporaire. Les nombres à virgule (`double`) sont approximatifs et ne conviennent pas à l'argent. En séance 2, nous passerons à `BigDecimal`, le type adapté aux montants.
+
+## 0. 🛠️ Préparer son poste
+
+Cette partie se fait **sur votre machine**, avant la séance ou pendant les premières minutes. À la fin, vous avez trois choses : Java 25 et Maven installés, IntelliJ IDEA configuré, et un premier programme qui tourne, que vous savez suivre pas à pas avec le débogueur.
+
+Pourquoi tant d'insistance ? En programmation, on apprend **en tapant du code et en le faisant tourner**, pas en lisant. Plus vite votre poste est prêt, plus vite vous pouvez essayer chaque exemple de ce support.
+
+### 0.1 🛠️ Installer Java 25 et Maven avec SDKMAN (macOS, Linux, WSL)
+
+**Pourquoi SDKMAN ?** Vous aurez besoin de plusieurs versions de Java au cours de votre carrière : Java 25 pour ce cours, Java 17 ou 21 pour un projet d'entreprise… SDKMAN installe ces versions dans votre dossier personnel, **sans droits administrateur**, et vous laisse passer de l'une à l'autre en une commande. Il installe aussi Maven.
+
+**Étape 1 — Installer SDKMAN.** Dans un terminal :
+
+```text
+$ curl -s "https://get.sdkman.io" | bash
+$ source "$HOME/.sdkman/bin/sdkman-init.sh"
+$ sdk version
+SDKMAN!
+script: 5.x.x
+```
+
+> 🔒 **Sécurité** — `curl … | bash` exécute un script téléchargé sans que vous l'ayez lu. C'est pratique, mais cela revient à faire confiance au site. Ici, la source est le site officiel de SDKMAN, en HTTPS. Sur une machine sensible, téléchargez d'abord le script (`curl -s https://get.sdkman.io -o install.sh`), lisez-le, puis lancez-le.
+
+**Étape 2 — Choisir une version de Java.** Listez les distributions disponibles :
+
+```text
+$ sdk list java
+ Vendor         | Use | Version      | Dist | Status | Identifier
+ Temurin        |     | 25.0.5.0+8   | tem  |        | 25.0.5.0+8-tem
+ ...
+```
+
+Cherchez une ligne **Temurin** (la distribution libre de la fondation Eclipse) en version **25**, et copiez la valeur de la colonne **Identifier**. Le numéro exact change à chaque mise à jour de sécurité : prenez le plus récent en 25.
+
+**Étape 3 — Installer Java et Maven.**
+
+```text
+$ sdk install java 25.0.5.0+8-tem   ← remplacez par l'identifiant copié
+Do you want java 25.0.5.0+8-tem to be set as default? (Y/n): Y
+$ sdk install maven
+```
+
+**Étape 4 — Vérifier.** Ouvrez un **nouveau** terminal, puis :
+
+```text
+$ java -version
+openjdk version "25.0.5" … LTS
+$ javac -version
+javac 25.0.5
+$ mvn -v
+Apache Maven 3.9.x
+Java version: 25.0.5
+```
+
+Les trois lignes importantes : `java` en 25, `javac` en 25, et Maven qui utilise **Java 25** (ligne `Java version`).
+
+Quelques commandes SDKMAN utiles :
+
+| Commande | Effet |
+|---|---|
+| `sdk current java` | affiche la version active |
+| `sdk use java <identifiant 21>` | change de version **dans ce terminal seulement** |
+| `sdk default java <identifiant 25>` | change la version par défaut |
+| `sdk upgrade` | liste les mises à jour disponibles |
+
+**Problèmes fréquents.**
+
+| Symptôme | Cause | Solution |
+|---|---|---|
+| `sdk: command not found` | le terminal a été ouvert avant l'installation | ouvrir un nouveau terminal, ou `source "$HOME/.sdkman/bin/sdkman-init.sh"` |
+| `java -version` affiche 17 ou 21 | une autre version est la version par défaut | `sdk default java <identifiant 25>` |
+| `mvn -v` affiche une autre version de Java | la variable `JAVA_HOME` pointe ailleurs | retirer l'ancien `export JAVA_HOME=…` de `~/.zshrc` ou `~/.bashrc` : SDKMAN la gère |
+| `javac: command not found` alors que `java` marche | un JRE ou un ancien Java système passe avant | vérifier avec `which javac` ; il doit être dans `~/.sdkman/candidates/java/current/bin` |
+
+### 0.2 🛠️ Sous Windows
+
+SDKMAN ne fonctionne pas directement sous Windows. Deux options :
+
+1. **Recommandé : WSL** (*Windows Subsystem for Linux*). Dans un PowerShell administrateur : `wsl --install`, puis redémarrez. Vous obtenez un vrai terminal Linux (Ubuntu), dans lequel vous suivez le §0.1 à l'identique. C'est aussi l'environnement le plus proche des serveurs sur lesquels votre code tournera.
+2. **Sans terminal Linux : tout par IntelliJ.** IntelliJ sait télécharger un JDK (§0.3, étape 3) et embarque son propre Maven. Pour la ligne de commande Windows, installez Java avec `winget install EclipseAdoptium.Temurin.25.JDK` dans un PowerShell, puis ouvrez un nouveau terminal et vérifiez `java -version`.
+
+Avec l'option 2, les commandes `mvn` de ce support se lancent depuis IntelliJ (fenêtre **Maven**, à droite) plutôt que dans un terminal.
+
+### 0.3 🛠️ Installer et configurer IntelliJ IDEA
+
+**Pourquoi un IDE ?** Un éditeur de texte suffit pour écrire du Java, mais un IDE (*Integrated Development Environment*) vous signale les erreurs **pendant que vous tapez**, complète le code, lance les programmes et les tests en un clic, et surtout fournit un **débogueur**.
+
+**Étape 1 — Installer.** Téléchargez **IntelliJ IDEA** sur [jetbrains.com/idea](https://www.jetbrains.com/idea/download/). Les fonctions utilisées dans ce cours sont gratuites. En tant qu'étudiant, vous pouvez aussi demander une licence éducation gratuite qui débloque tout ([jetbrains.com/student](https://www.jetbrains.com/academy/student-pack/)).
+
+**Étape 2 — Créer un projet.** *New Project* :
+
+| Champ | Valeur |
+|---|---|
+| Name | `seance1` |
+| Language | Java |
+| Build system | **Maven** |
+| JDK | **25** (voir étape 3 s'il n'apparaît pas) |
+| Add sample code | coché |
+| Advanced Settings → GroupId | `fr.foodfast` |
+
+IntelliJ crée la structure Maven (`pom.xml`, `src/main/java`, `src/test/java`) et une classe `Main`.
+
+**Étape 3 — Si le JDK 25 n'apparaît pas.** Dans la liste *JDK* :
+- avec SDKMAN : *Add JDK from disk…* et choisissez `~/.sdkman/candidates/java/current` (sous WSL : *Add JDK from disk* puis le chemin `\\wsl$\Ubuntu\home\<vous>\.sdkman\candidates\java\current`) ;
+- sans SDKMAN : *Download JDK…*, version **25**, vendeur **Eclipse Temurin**.
+
+**Étape 4 — Lancer.** Ouvrez `Main.java` : une flèche verte ▶ apparaît dans la marge, à gauche de `main`. Cliquez dessus, puis *Run*. La sortie s'affiche dans la fenêtre **Run**, en bas.
+
+**Deux raccourcis de saisie à connaître dès maintenant** : tapez `main` puis Tab pour générer une méthode `main`, et `sout` puis Tab pour générer `System.out.println();`.
+
+**Piège.**
+
+❌ Créer le fichier dans le mauvais dossier. Une classe placée à la racine du projet ou dans `src/test/java` ne sera pas lancée comme vous le pensez.
+
+✅ Le code de l'application va dans **`src/main/java`**, les tests dans **`src/test/java`** (§5.2). Clic droit sur `src/main/java` → *New* → *Java Class*.
+
+### 0.4 🛠️ Le débogueur : regarder son programme s'exécuter
+
+**Pourquoi ?** Quand un programme donne un mauvais résultat, la tentation est d'ajouter des `println` partout. Le débogueur fait mieux : il **arrête** le programme sur une ligne choisie, vous montre la valeur de **toutes** les variables, puis avance ligne par ligne. C'est l'outil qui vous fera gagner le plus de temps cette année.
+
+**Exemple : un total faux.** Ce programme compile, s'exécute… et donne un mauvais total. Copiez-le dans IntelliJ :
+
+```java
+// Fichier : BuggyTotal.java
+public class BuggyTotal {
+
+    static int totalCents(int[] pricesCents) {
+        int total = 0;
+        for (int i = 1; i < pricesCents.length; i++) {
+            total = total + pricesCents[i];
+        }
+        return total;
+    }
+
+    public static void main(String[] args) {
+        int[] basket = {1250, 450, 800};   // 12,50 € + 4,50 € + 8,00 €
+        int total = totalCents(basket);
+        System.out.println("Total : " + total + " centimes");  // attendu : 2500
+    }
+}
+```
+
+```text
+Total : 1250 centimes
+```
+
+**Trouver le bug avec le débogueur, en cinq gestes :**
+
+1. **Poser un point d'arrêt** : cliquez dans la marge, sur le numéro de la ligne `int total = 0;`. Un rond rouge apparaît.
+2. **Lancer en mode debug** : flèche verte ▶ à côté de `main` → *Debug* (et non *Run*). Le programme s'arrête sur la ligne marquée, surlignée en bleu.
+3. **Observer** : la fenêtre **Debug**, en bas, affiche les variables (`pricesCents`, puis `total`, `i`…). Dépliez `pricesCents` pour voir ses trois cases.
+4. **Avancer d'une ligne** : *Step Over* (F8). Avancez jusqu'à entrer dans la boucle et regardez la valeur de `i` au premier tour. Elle vaut `1` : la case `0` (le 12,50 €) n'est jamais additionnée.
+5. **Reprendre** : *Resume* (F9 sous Windows et Linux, ⌥⌘R sous macOS) laisse le programme finir.
+
+Corrigez (`int i = 0`), relancez : `Total : 2500 centimes`.
+
+| Action | Windows / Linux | macOS |
+|---|---|---|
+| Poser ou retirer un point d'arrêt | Ctrl+F8 | ⌘F8 |
+| Avancer d'une ligne (*Step Over*) | F8 | F8 |
+| Entrer dans la méthode appelée (*Step Into*) | F7 | F7 |
+| Reprendre jusqu'au prochain point d'arrêt | F9 | ⌥⌘R |
+| Évaluer une expression (*Evaluate*) | Alt+F8 | ⌥F8 |
+
+Sur un Mac, les touches F7 et F8 demandent souvent la touche `fn`.
+
+> 🔵 **Évaluer une expression.** Pendant que le programme est arrêté, *Evaluate Expression* (Alt+F8) vous laisse taper n'importe quelle expression Java, par exemple `pricesCents[0] + pricesCents[1]`, et affiche le résultat. C'est jshell, mais au milieu de votre programme.
+
+### 0.5 🛠️ Les raccourcis IntelliJ qui changent la vie
+
+| Action | Windows / Linux | macOS |
+|---|---|---|
+| Complétion | Ctrl+Espace | ⌃Espace |
+| **Corriger l'erreur sous le curseur** (importer, créer la méthode…) | Alt+Entrée | ⌥↩ |
+| Reformater le fichier | Ctrl+Alt+L | ⌥⌘L |
+| Renommer partout | Maj+F6 | ⇧F6 |
+| Chercher n'importe quoi (fichier, classe, action) | Maj Maj | ⇧⇧ |
+| Aller à la définition | Ctrl+clic | ⌘clic |
+
+Le plus utile : **Alt+Entrée** sur un mot souligné en rouge. IntelliJ propose presque toujours la bonne correction… mais lisez-la avant de l'accepter.
 
 ---
 
@@ -221,6 +403,83 @@ jshell> Math.multiplyExact(1250, 2_000_000)
 |  Exception java.lang.ArithmeticException: integer overflow
 jshell> /exit
 ```
+
+### 1.6 🛠️ À vous
+
+> ⏱️ 15 à 20 min, sur votre machine. Les solutions sont repliées : essayez d'abord, ouvrez ensuite.
+
+**Exercice 1 — Compiler à la main et lire trois erreurs** (⏱️ 8 min)
+
+1. Dans un dossier vide, créez `Hello.java` avec le programme du §1.2.
+2. Dans un terminal, placé dans ce dossier : `javac Hello.java`, puis `ls` (ou `dir` sous Windows). Quel fichier est apparu ?
+3. Lancez `java Hello`, puis `java Hello.java`. Quelle différence ?
+4. Introduisez **une** erreur à la fois, compilez, lisez le message, puis réparez :
+   - supprimez le `;` à la fin d'une ligne ;
+   - écrivez `IO.printn` au lieu de `IO.println` ;
+   - supprimez le `"` fermant d'un texte.
+
+Pour chaque erreur, notez la **ligne** indiquée et le **message**.
+
+<details>
+<summary>Solution de l'exercice 1</summary>
+
+2. `Hello.class` est apparu : c'est le bytecode.
+3. `java Hello` exécute le `.class` déjà compilé. `java Hello.java` recompile le source en mémoire puis l'exécute, sans créer de `.class`.
+4. Les trois messages :
+
+```text
+Hello.java:2: error: ';' expected
+    IO.println("Bienvenue chez FoodFast !")
+                                           ^
+
+Hello.java:2: error: cannot find symbol
+    IO.printn("Bienvenue chez FoodFast !");
+      ^
+  symbol:   method printn(String)
+  location: class IO
+
+Hello.java:2: error: unclosed string literal
+    IO.println("Bienvenue chez FoodFast !);
+               ^
+```
+
+`cannot find symbol` est le message que vous verrez le plus souvent : un nom mal orthographié, une variable non déclarée, un `import` manquant. Lisez les lignes `symbol` et `location` : elles disent **quel** nom est inconnu et **où** il a été cherché. L'annexe B liste les erreurs les plus fréquentes.
+
+</details>
+
+**Exercice 2 — La même chose dans IntelliJ, avec des arguments** (⏱️ 10 min)
+
+Dans le projet créé au §0.3, ajoutez une classe `Welcome` (forme classique, §1.3) qui affiche `Bienvenue chez <restaurant> !`. Le nom du restaurant est le premier argument du programme. Sans argument, le programme affiche `Bienvenue chez FoodFast !`.
+
+1. Lancez-la avec ▶ : vous devez voir `Bienvenue chez FoodFast !`.
+2. Passez un argument : menu *Run* → *Edit Configurations…* → champ *Program arguments* : `"Chez Mario"` (avec les guillemets, sinon ce sont deux arguments). Relancez.
+3. Que se passe-t-il si vous lisez `args[0]` sans vérifier qu'il existe, et sans argument ?
+
+**Indice.** `args` est un tableau de `String` ; `args.length` donne le nombre d'arguments.
+
+<details>
+<summary>Solution de l'exercice 2</summary>
+
+```java
+// Fichier : Welcome.java
+public class Welcome {
+    public static void main(String[] args) {
+        String restaurant = "FoodFast";
+        if (args.length > 0) {
+            restaurant = args[0];
+        }
+        System.out.println("Bienvenue chez " + restaurant + " !");
+    }
+}
+```
+
+3. Sans la vérification, `args[0]` lève une `ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0` : le tableau est vide. C'est le premier réflexe de robustesse : **ne jamais supposer qu'une entrée existe**.
+
+</details>
+
+**Exercice 3 🔵 — Regarder le bytecode** (⏱️ 5 min)
+
+Après `javac Hello.java`, lancez `javap -c Hello`. Retrouvez dans la sortie la chaîne `"Bienvenue chez FoodFast !"` et l'appel à `println`. Vous lisez ce que la JVM exécute réellement.
 
 ---
 
@@ -582,6 +841,108 @@ void main() {
 ```
 
 Une constante nommée vaut mieux qu'un « nombre magique » : `quantity <= MAX_QUANTITY` se lit et se modifie en un seul endroit.
+
+### 2.8 🛠️ À vous
+
+> ⏱️ 20 à 30 min, sur votre machine.
+
+**Exercice 1 — Prédire, puis vérifier dans jshell** (⏱️ 8 min)
+
+Écrivez d'abord sur papier ce que vaut chaque expression. Lancez ensuite `jshell` et tapez-les une par une.
+
+```text
+7 / 2
+7 / 2.0
+7 % 3
+"Total : " + 1 + 2
+1 + 2 + " €"
+Integer.MAX_VALUE + 1
+0.1 + 0.2
+"PROMO" == new String("PROMO")
+"PROMO".equals(new String("PROMO"))
+```
+
+<details>
+<summary>Solution de l'exercice 1</summary>
+
+| Expression | Résultat | Pourquoi |
+|---|---|---|
+| `7 / 2` | `3` | deux `int` : division entière, tronquée (§2.4) |
+| `7 / 2.0` | `3.5` | un `double` suffit pour une division réelle |
+| `7 % 3` | `1` | le reste de la division |
+| `"Total : " + 1 + 2` | `"Total : 12"` | de gauche à droite : texte + 1 donne un texte, puis + 2 |
+| `1 + 2 + " €"` | `"3 €"` | `1 + 2` est calculé d'abord, entre deux `int` |
+| `Integer.MAX_VALUE + 1` | `-2147483648` | débordement silencieux (§2.6) |
+| `0.1 + 0.2` | `0.30000000000000004` | un `double` est approximatif : jamais pour l'argent |
+| `"PROMO" == new String("PROMO")` | `false` | deux objets différents (§2.5) |
+| `"PROMO".equals(...)` | `true` | même contenu |
+
+</details>
+
+**Exercice 2 — Une ligne de ticket** (⏱️ 10 min)
+
+Dans un *compact source file* `TicketLine.java`, déclarez trois variables : le nom du plat (`"Margherita"`), son prix unitaire **en centimes** (`1250`) et la quantité (`2`). Affichez :
+
+```text
+2 x Margherita = 25,00 €
+```
+
+Écrivez pour cela une méthode `static String formatEuros(int cents)` qui transforme `2500` en `"25,00 €"` et `2505` en `"25,05 €"`.
+
+**Indice.** `cents / 100` donne les euros, `cents % 100` les centimes. Attention à `5` centimes, qui doit s'afficher `05`.
+
+<details>
+<summary>Solution de l'exercice 2</summary>
+
+```java
+// Fichier : TicketLine.java
+static String formatEuros(int cents) {
+    int euros = cents / 100;
+    int rest = cents % 100;
+    String twoDigits = rest < 10 ? "0" + rest : "" + rest;
+    return euros + "," + twoDigits + " €";
+}
+
+void main() {
+    String dishName = "Margherita";
+    int unitPriceCents = 1250;
+    int quantity = 2;
+    int lineTotal = unitPriceCents * quantity;
+    IO.println(quantity + " x " + dishName + " = " + formatEuros(lineTotal));
+    IO.println(formatEuros(2505));    // 25,05 €
+    IO.println(formatEuros(7));       // 0,07 €
+}
+```
+
+L'expression `condition ? a : b` (l'opérateur ternaire) vaut `a` si la condition est vraie, sinon `b`. Un `if` / `else` ferait la même chose. Nous verrons en séance 2 un outil plus adapté pour l'argent : `BigDecimal`.
+
+</details>
+
+**Exercice 3 — Voir un débordement au débogueur** (⏱️ 7 min)
+
+Copiez ce programme dans IntelliJ. Posez un point d'arrêt sur la ligne `orders = orders + 1;`, lancez en *Debug* (§0.4), puis appuyez sur *Resume* plusieurs fois en regardant la variable `orders`. À quel tour devient-elle négative ?
+
+```java
+// Fichier : CounterOverflow.java
+public class CounterOverflow {
+    public static void main(String[] args) {
+        int orders = Integer.MAX_VALUE - 2;
+        for (int round = 1; round <= 5; round++) {
+            orders = orders + 1;
+            System.out.println("Tour " + round + " : " + orders);
+        }
+    }
+}
+```
+
+Remplacez ensuite `orders + 1` par `Math.addExact(orders, 1)` et relancez. Que se passe-t-il ?
+
+<details>
+<summary>Solution de l'exercice 3</summary>
+
+Au tour 3, `orders` passe de `2147483647` à `-2147483648`, sans aucun message d'erreur. Avec `Math.addExact`, le programme s'arrête au tour 3 sur une `ArithmeticException: integer overflow` : l'erreur **se voit**, c'est ce qu'on veut (§2.6).
+
+</details>
 
 ---
 
@@ -1041,6 +1402,153 @@ int left = stock.getOrDefault("Sushi", 0);      // 0 si absent
 
 ❌ `List.of(...)` crée une liste **non modifiable** : `words.add("x")` lève une `UnsupportedOperationException`. Pour une liste qu'on remplit, on écrit `new ArrayList<>()` (séance 2).
 
+### 3.9 🛠️ À vous
+
+> ⏱️ 30 à 40 min, sur votre machine. Commencez par les exercices 1 et 2 ; le 3 est plus long.
+
+**Exercice 1 — Le jour de la semaine** (⏱️ 8 min)
+
+Écrivez `static String dayLabel(int day)` qui renvoie `"lundi"` pour 1, `"mardi"` pour 2… `"dimanche"` pour 7, et `"jour invalide"` pour tout autre nombre. Utilisez un `switch` en expression (§3.2). Affichez le résultat pour 1, 7, 0 et 8.
+
+<details>
+<summary>Solution de l'exercice 1</summary>
+
+```java
+// Fichier : DayLabel.java
+static String dayLabel(int day) {
+    return switch (day) {
+        case 1 -> "lundi";
+        case 2 -> "mardi";
+        case 3 -> "mercredi";
+        case 4 -> "jeudi";
+        case 5 -> "vendredi";
+        case 6 -> "samedi";
+        case 7 -> "dimanche";
+        default -> "jour invalide";
+    };
+}
+
+void main() {
+    IO.println(dayLabel(1));   // lundi
+    IO.println(dayLabel(7));   // dimanche
+    IO.println(dayLabel(0));   // jour invalide
+    IO.println(dayLabel(8));   // jour invalide
+}
+```
+
+</details>
+
+**Exercice 2 — Des sommes, et le débogueur** (⏱️ 12 min)
+
+1. Écrivez `static long sumUpTo(int n)` : la somme `1 + 2 + … + n`. Pour `n ≤ 0`, elle vaut `0`.
+2. Écrivez `static long sumEvenUpTo(int n)` : la somme des nombres **pairs** de `2` à `n`.
+3. Posez un point d'arrêt dans la boucle de `sumUpTo`, lancez en *Debug* avec `sumUpTo(4)` et suivez `i` et la somme avec *Step Over* (F8) pendant trois tours.
+4. Vérifiez : `sumUpTo(100)` vaut `5050`. Pourquoi le type de retour est-il `long` et pas `int` ? Essayez `sumUpTo(100_000)` avec un `int`.
+
+<details>
+<summary>Solution de l'exercice 2</summary>
+
+```java
+// Fichier : Sums.java
+static long sumUpTo(int n) {
+    long sum = 0;
+    for (int i = 1; i <= n; i++) {
+        sum += i;
+    }
+    return sum;
+}
+
+static long sumEvenUpTo(int n) {
+    long sum = 0;
+    for (int i = 2; i <= n; i += 2) {
+        sum += i;
+    }
+    return sum;
+}
+
+void main() {
+    IO.println(sumUpTo(4));          // 10
+    IO.println(sumUpTo(100));        // 5050
+    IO.println(sumUpTo(0));          // 0 : la boucle ne tourne pas
+    IO.println(sumEvenUpTo(10));     // 30 = 2 + 4 + 6 + 8 + 10
+    IO.println(sumUpTo(100_000));    // 5000050000 : dépasse la capacité d'un int
+}
+```
+
+Avec `int`, `sumUpTo(100_000)` donnerait `705082704` : la vraie valeur, 5 000 050 000, dépasse `Integer.MAX_VALUE` (environ 2,1 milliards). `long` va jusqu'à environ 9,2 × 10¹⁸.
+
+</details>
+
+**Exercice 3 — Statistiques d'un panier** (⏱️ 15 min)
+
+Créez une classe nommée `BasketStats` (elle servira pour les tests du §5.8) avec trois méthodes `static` :
+
+- `maxCents(int[] prices)` : le prix le plus élevé ;
+- `countAbove(int[] prices, int thresholdCents)` : le nombre de prix **strictement** supérieurs au seuil ;
+- `averageCents(int[] prices)` : la moyenne, arrondie à l'entier inférieur.
+
+Avec `{1250, 450, 800, 1590}` : maximum `1590`, `countAbove(…, 1000)` vaut `2`, moyenne `1022`.
+
+Que doivent faire `maxCents` et `averageCents` sur un tableau **vide** ? Décidez, puis programmez-le.
+
+**Indice.** Pour le maximum, partez du premier élément, pas de `0` : que se passerait-il avec des valeurs négatives ?
+
+<details>
+<summary>Solution de l'exercice 3</summary>
+
+```java
+// Fichier : BasketStats.java
+public class BasketStats {
+
+    public static int maxCents(int[] prices) {
+        requireNotEmpty(prices);
+        int max = prices[0];
+        for (int price : prices) {
+            if (price > max) {
+                max = price;
+            }
+        }
+        return max;
+    }
+
+    public static int countAbove(int[] prices, int thresholdCents) {
+        int count = 0;
+        for (int price : prices) {
+            if (price > thresholdCents) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public static int averageCents(int[] prices) {
+        requireNotEmpty(prices);
+        long sum = 0;                       // long : la somme peut dépasser un int
+        for (int price : prices) {
+            sum += price;
+        }
+        return (int) (sum / prices.length);
+    }
+
+    private static void requireNotEmpty(int[] prices) {
+        if (prices == null || prices.length == 0) {
+            throw new IllegalArgumentException("le panier est vide");
+        }
+    }
+
+    public static void main(String[] args) {
+        int[] basket = {1250, 450, 800, 1590};
+        System.out.println(maxCents(basket));          // 1590
+        System.out.println(countAbove(basket, 1000));  // 2
+        System.out.println(averageCents(basket));      // 1022
+    }
+}
+```
+
+Sur un panier vide, il n'existe ni maximum ni moyenne. Renvoyer `0` serait un mensonge silencieux : on **refuse** l'entrée avec une exception. `countAbove`, elle, a une réponse naturelle : `0`.
+
+</details>
+
 ---
 
 ## 4. Chaînes de caractères et validation
@@ -1425,6 +1933,159 @@ void main() {
 
 ✅ Convertir explicitement avec `StandardCharsets.UTF_8`, et compter les octets sur le tableau obtenu.
 
+### 4.8 🛠️ À vous
+
+> ⏱️ 25 à 35 min, sur votre machine.
+
+**Exercice 1 — Nettoyer un code promo saisi** (⏱️ 8 min)
+
+Les clients tapent leur code promo n'importe comment : `"  promo10 "`, `"Promo10"`, `"PROMO10"`. Écrivez `static String normalizePromoCode(String raw)` qui retire les espaces au début et à la fin, puis met en majuscules. Si `raw` vaut `null`, la méthode renvoie `""`.
+
+Vérifiez ensuite, avec `InputValidator.isValidPromoCode` (§4.3), que les trois saisies ci-dessus deviennent valides, mais pas `"PROMO 10"` ni `"PROMO10'--"`.
+
+<details>
+<summary>Solution de l'exercice 1</summary>
+
+```java
+// Fichier : PromoNormalizer.java (avec InputValidator.java)
+public class PromoNormalizer {
+
+    static String normalizePromoCode(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.strip().toUpperCase();
+    }
+
+    public static void main(String[] args) {
+        String[] inputs = {"  promo10 ", "Promo10", "PROMO10", "PROMO 10", "PROMO10'--", null};
+        for (String input : inputs) {
+            String code = normalizePromoCode(input);
+            System.out.println("[" + input + "] -> [" + code + "] "
+                    + InputValidator.isValidPromoCode(code));
+        }
+    }
+}
+```
+
+On **normalise d'abord, on valide ensuite** : la validation ne voit qu'une seule forme du code. L'ordre inverse laisserait passer des variantes que le reste du programme ne sait pas traiter.
+
+</details>
+
+**Exercice 2 — Convertir avec `try` / `catch`… et découvrir un piège** (⏱️ 10 min)
+
+Écrivez `static int parseQuantity(String text)` qui renvoie la quantité (entre 1 et 20) ou `-1` si la saisie est invalide. Utilisez `Integer.parseInt` dans un `try` / `catch` (§4.6), puis vérifiez les bornes.
+
+Testez avec : `"3"`, `" 3"`, `"abc"`, `"0"`, `"21"`, `"99999999999"`, `null`, et `"٣"` (copiez-le tel quel : c'est le chiffre 3 en écriture arabe-indienne). Comparez avec `InputValidator.isValidQuantity` : laquelle des deux méthodes accepte `"٣"` ? Pourquoi est-ce un problème ?
+
+<details>
+<summary>Solution de l'exercice 2</summary>
+
+```java
+// Fichier : QuantityParser.java
+static int parseQuantity(String text) {
+    if (text == null) {
+        return -1;
+    }
+    try {
+        int quantity = Integer.parseInt(text);
+        if (quantity < 1 || quantity > 20) {
+            return -1;
+        }
+        return quantity;
+    } catch (NumberFormatException e) {
+        return -1;
+    }
+}
+
+void main() {
+    String[] inputs = {"3", " 3", "abc", "0", "21", "99999999999", null, "٣"};
+    for (String input : inputs) {
+        IO.println("[" + input + "] -> " + parseQuantity(input));
+    }
+}
+```
+
+```text
+[3] -> 3
+[ 3] -> -1
+[abc] -> -1
+[0] -> -1
+[21] -> -1
+[99999999999] -> -1
+[null] -> -1
+[٣] -> 3
+```
+
+`Integer.parseInt` accepte **tous les chiffres Unicode** : `"٣"` donne `3`. `isValidQuantity` le refuse, car elle n'autorise que `'0'` à `'9'`. Ce n'est pas grave pour une quantité, mais c'est une vraie faille quand une autre partie du système (une base de données, un autre service) interprète le texte différemment : les deux composants ne « voient » pas la même donnée. Morale 🔒 : **liste blanche explicite d'abord, conversion ensuite**.
+
+</details>
+
+**Exercice 3 — Un ticket complet** (⏱️ 12 min)
+
+À partir de trois tableaux de même longueur :
+
+```java
+String[] dishes = {"Margherita", "Tiramisu", "Eau pétillante"};
+int[] pricesCents = {1250, 650, 300};
+int[] quantities = {2, 1, 3};
+```
+
+construisez avec un `StringBuilder` (§4.2), puis affichez, le ticket suivant :
+
+```text
+2 x Margherita = 25,00 €
+1 x Tiramisu = 6,50 €
+3 x Eau pétillante = 9,00 €
+TOTAL = 40,50 €
+```
+
+Réutilisez `formatEuros` de l'exercice 2 du §2.8.
+
+<details>
+<summary>Solution de l'exercice 3</summary>
+
+```java
+// Fichier : FullTicket.java
+static String formatEuros(int cents) {
+    int rest = cents % 100;
+    return cents / 100 + "," + (rest < 10 ? "0" + rest : "" + rest) + " €";
+}
+
+static String ticket(String[] dishes, int[] pricesCents, int[] quantities) {
+    StringBuilder sb = new StringBuilder();
+    int total = 0;
+    for (int i = 0; i < dishes.length; i++) {
+        int line = Math.multiplyExact(pricesCents[i], quantities[i]);
+        total = Math.addExact(total, line);
+        sb.append(quantities[i]).append(" x ").append(dishes[i])
+          .append(" = ").append(formatEuros(line)).append('\n');
+    }
+    sb.append("TOTAL = ").append(formatEuros(total));
+    return sb.toString();
+}
+
+void main() {
+    String[] dishes = {"Margherita", "Tiramisu", "Eau pétillante"};
+    int[] pricesCents = {1250, 650, 300};
+    int[] quantities = {2, 1, 3};
+    IO.println(ticket(dishes, pricesCents, quantities));
+}
+```
+
+</details>
+
+**Exercice 4 🔵 — Caractères ou octets ?** (⏱️ 3 min)
+
+Dans jshell, prédisez puis vérifiez : `"Crème brûlée".length()` et `"Crème brûlée".getBytes(java.nio.charset.StandardCharsets.UTF_8).length`.
+
+<details>
+<summary>Solution de l'exercice 4</summary>
+
+`12` caractères, mais `15` octets : `è`, `û` et `é` occupent chacun 2 octets en UTF-8 (§4.7). Vous en aurez besoin dès la première séance du TP : le protocole Redis compte en **octets**.
+
+</details>
+
 ---
 
 ## 5. Maven et JUnit
@@ -1800,11 +2461,102 @@ class OrderCalculatorErrorTest {
 
 > 🔵 **Couverture de code.** L'outil JaCoCo mesure quelles lignes et quelles branches vos tests exécutent. Pour Java 25, il faut **JaCoCo 0.8.14 ou plus récent** : les versions antérieures ne savent pas lire le bytecode de Java 25. Une couverture élevée ne garantit pas de bons tests (voir le piège « test qui ne vérifie rien ») ; elle sert surtout à repérer le code **jamais** testé.
 
+### 5.8 🛠️ À vous
+
+> ⏱️ 30 à 40 min, sur votre machine. C'est l'atelier le plus important de la séance : le TP commence exactement comme cela.
+
+**Exercice 1 — Un projet Maven qui teste** (⏱️ 15 min)
+
+1. Reprenez le projet IntelliJ du §0.3 (ou créez-en un : *New Project*, build system **Maven**, JDK 25).
+2. Remplacez le contenu du `pom.xml` par celui du §5.3, en gardant votre `groupId` et votre `artifactId`. Cliquez sur l'icône Maven qui apparaît en haut à droite de l'éditeur (*Load Maven Changes*) pour qu'IntelliJ relise le fichier.
+3. Copiez `BasketStats` (exercice 3 du §3.9) dans `src/main/java`.
+4. Dans `src/test/java`, créez `BasketStatsTest` avec trois tests :
+   - un cas nominal : le maximum de `{1250, 450, 800, 1590}` vaut `1590` ;
+   - un cas limite : `countAbove` avec un prix **égal** au seuil ne le compte pas ;
+   - une entrée invalide : `averageCents` sur un tableau vide lève une `IllegalArgumentException`.
+5. Lancez les tests de **deux** façons : dans un terminal, `mvn test` à la racine du projet ; dans IntelliJ, la double flèche verte ▶▶ à côté du nom de la classe de test.
+
+**Indice.** Raccourci IntelliJ : placez le curseur sur le nom de la classe `BasketStats`, Alt+Entrée → *Create Test*. IntelliJ crée la classe au bon endroit.
+
+<details>
+<summary>Solution de l'exercice 1</summary>
+
+```java
+// Fichier : BasketStatsTest.java (avec BasketStats.java)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
+
+class BasketStatsTest {
+
+    @Test
+    void le_maximum_est_le_prix_le_plus_eleve() {
+        int[] basket = {1250, 450, 800, 1590};
+
+        int max = BasketStats.maxCents(basket);
+
+        assertEquals(1590, max);
+    }
+
+    @Test
+    void un_prix_egal_au_seuil_n_est_pas_compte() {
+        int[] basket = {1000, 1001, 999};
+
+        int count = BasketStats.countAbove(basket, 1000);
+
+        assertEquals(1, count);
+    }
+
+    @Test
+    void la_moyenne_d_un_panier_vide_est_refusee() {
+        int[] empty = {};
+
+        assertThrows(IllegalArgumentException.class,
+                () -> BasketStats.averageCents(empty));
+    }
+}
+```
+
+Dans le terminal, la fin de la sortie doit indiquer :
+
+```text
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+</details>
+
+**Exercice 2 — Casser exprès, et lire le rapport** (⏱️ 8 min)
+
+1. Dans `BasketStats.countAbove`, remplacez `price > thresholdCents` par `price >= thresholdCents`.
+2. Relancez `mvn test`. Lisez le rapport : quel test échoue ? Que signifient `expected` et `but was` ?
+3. Rétablissez le code et vérifiez que tout redevient vert.
+
+<details>
+<summary>Solution de l'exercice 2</summary>
+
+```text
+[ERROR]   BasketStatsTest.un_prix_egal_au_seuil_n_est_pas_compte:… expected: <1> but was: <2>
+[ERROR] Tests run: 3, Failures: 1, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+```
+
+`expected` est la valeur attendue (le **premier** argument d'`assertEquals`), `but was` la valeur obtenue. Le nom du test dit **quelle règle** est cassée : c'est pour cela qu'on lui donne un nom qui se lit comme une phrase. Le test du cas limite a attrapé l'erreur ; un seul test nominal ne l'aurait pas vue.
+
+</details>
+
+**Exercice 3 🔵 — Tester d'abord** (⏱️ 10 min)
+
+Écrivez d'abord un test paramétré (§5.7) pour `parseQuantity` (exercice 2 du §4.8) avec `@CsvSource` : chaque ligne contient une saisie et le résultat attendu (`"3, 3"`, `"abc, -1"`, `"21, -1"`…). Lancez-le **avant** d'avoir copié `parseQuantity` dans le projet : il ne compile pas (rouge). Copiez la méthode dans une classe `QuantityParser` : il passe (vert).
+
+**Indice.** Dans `@CsvSource`, entourez une valeur d'apostrophes pour garder ses espaces : `"' 3', -1"`.
+
 ---
 
 ## 6. 🟣 Défis pour ceux qui connaissent déjà
 
-Vous avez déjà programmé en Java ? Pendant que le reste du groupe consolide les bases, voici six défis. Chacun se fait en 15 à 40 minutes. Écrivez d'abord les **tests JUnit** (dans un projet Maven), puis le code. Les solutions sont dans l'annexe A, repliées : ne les ouvrez qu'après avoir essayé.
+Vous avez déjà programmé en Java ? Pendant que le reste du groupe consolide les bases, voici sept défis (§6.1 à §6.6 et §6.9), et deux sections pour mettre à jour vos connaissances (§6.7 et §6.8). Chaque défi se fait en 15 à 40 minutes. Écrivez d'abord les **tests JUnit** (dans un projet Maven), puis le code. Les solutions sont dans l'annexe A, repliées : ne les ouvrez qu'après avoir essayé.
 
 ### 6.1 🟣 Défi 1 — Algorithme de Luhn (numéro de carte)
 
@@ -1891,6 +2643,107 @@ Questions :
 3. Quelle protection côté serveur rend cette attaque impraticable ?
 
 **Indice.** `random.nextInt(alphabet.length())` donne un indice aléatoire. Un `StringBuilder` pour construire le code.
+
+### 6.7 🔵 Java moderne : si vous avez connu Java 8 ou 11
+
+Vous avez appris Java il y a quelques années, ou vous travaillez sur un projet en Java 8 ou 11 ? Voici ce qui a changé, et ce que ce cours utilise. Chaque ligne est détaillée dans la séance indiquée.
+
+| Avant | Aujourd'hui (Java 25) | Depuis | Séance |
+|---|---|---|---|
+| `public class X { public static void main(String[] args) … }` pour tout | `void main()` dans un *compact source file*, `IO.println` | 25 | 1 |
+| `Map<String, List<Order>> m = new HashMap<String, List<Order>>();` | `var m = new HashMap<String, List<Order>>();` | 10 | 1 |
+| `switch` avec `case …: … break;` | `switch` en expression avec `->`, sans `break` | 14 | 1 |
+| Chaînes multi-lignes avec `+` et `\n` | *Text blocks* `"""…"""` | 15 | 1 |
+| Classe de données : champs, constructeur, `equals`, `hashCode`, `toString` à la main (ou Lombok) | `record Dish(String name, BigDecimal price) {}` | 16 | 2 |
+| `if (o instanceof Dish) { Dish d = (Dish) o; … }` | `if (o instanceof Dish d) { … }` | 16 | 2 |
+| Hiérarchie ouverte à tous | `sealed interface … permits …` | 17 | 2 |
+| `switch` sur des constantes seulement | `switch` sur des types, avec déconstruction des `record` et gardes `when` | 21 | 2 |
+| `list.get(0)`, `list.get(list.size() - 1)` | `list.getFirst()`, `list.getLast()` | 21 | 2 |
+| `stream.collect(Collectors.toList())` | `stream.toList()` (non modifiable) | 16 | 3 |
+| Pool de threads limité, code asynchrone compliqué | *Virtual threads* : un thread par tâche, même pour 10 000 tâches | 21 | 4 |
+| `import java.util.*; import java.io.*; …` | `import module java.base;` | 25 | 1 |
+
+**Ce qu'il faut désapprendre :**
+- `new Integer(5)`, `new Double(…)` : dépréciés et appelés à disparaître (le compilateur vous prévient). Écrivez `5`, ou `Integer.valueOf(5)`.
+- `Date`, `Calendar`, `SimpleDateFormat` : remplacés par `java.time` (`LocalDate`, `Instant`…), séance 2.
+- `Vector`, `Hashtable`, `StringBuffer` : remplacés par `ArrayList`, `HashMap`, `StringBuilder`.
+- `e.printStackTrace()` pour « gérer » une erreur : séance 3.
+- Le JRE séparé : il n'existe plus, voir §1.1.
+
+### 6.8 🟣 Sous le capot : quatre manipulations
+
+Ces manipulations ne sont pas nécessaires pour le TP. Elles expliquent des comportements qui surprennent même des développeurs expérimentés.
+
+**1. Le cache des `Integer`.** Dans jshell :
+
+```text
+jshell> Integer a = 127, b = 127;
+jshell> a == b
+$3 ==> true
+jshell> Integer c = 128, d = 128;
+jshell> c == d
+$6 ==> false
+```
+
+`Integer` est une **classe** (le type « emballé » de `int`). `==` compare donc des **références**, comme pour les `String`. Java garde en cache les objets `Integer` de -128 à 127 : `a` et `b` désignent le même objet, `c` et `d` deux objets différents. Morale : `equals` pour comparer des `Integer`, toujours. Ce bug passe tous les tests avec de petites valeurs, puis apparaît en production.
+
+**2. Le *string pool*.** Toujours dans jshell :
+
+```text
+jshell> String s1 = "PROMO10";
+jshell> String s2 = new String("PROMO10");
+jshell> s1 == s2
+$9 ==> false
+jshell> s1 == s2.intern()
+$10 ==> true
+```
+
+Les littéraux identiques sont partagés dans un *pool*. `intern()` renvoie l'exemplaire du pool. C'est pourquoi `==` sur des `String` « marche parfois » (§2.5) : un piège, pas une fonctionnalité.
+
+**3. Lire le bytecode d'une méthode.** Compilez `OrderCalculator` (§3.5), puis lancez `javap -c OrderCalculator`. Dans `totalCents`, retrouvez la boucle : `if_icmpge` (sortir si `i >= length`), `iaload` (lire une case du tableau), les deux appels `invokestatic` à `Math.multiplyExact` et `Math.addExact`, `iinc` (le `i++`) et `goto` (revenir au test). Remplacez ensuite `Math.addExact(total, line)` par `total + line`, recompilez : l'appel est remplacé par une seule instruction `iadd`, qui ne vérifie rien.
+
+**4. Le JIT au travail.** Ce programme mesure dix fois le même calcul :
+
+```java
+// Fichier : JitWarmup.java
+static long sumOfSquares(int n) {
+    long sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum += (long) i * i;
+    }
+    return sum;
+}
+
+void main() {
+    for (int round = 1; round <= 10; round++) {
+        long start = System.nanoTime();
+        long result = sumOfSquares(5_000_000);
+        long micros = (System.nanoTime() - start) / 1_000;
+        IO.println("Tour " + round + " : " + micros + " µs (" + result + ")");
+    }
+}
+```
+
+Les premiers tours sont nettement plus lents : la JVM **interprète** d'abord la méthode, puis la compile en code machine quand elle devient « chaude ». Relancez avec `java -Xint JitWarmup.java` (interprétation seule, sans JIT) et comparez. C'est pourquoi un *benchmark* Java sérieux ne mesure jamais les premières exécutions (outil de référence : JMH).
+
+### 6.9 🟣 Défi 7 — Parler le protocole Redis à la main
+
+**Contexte.** Le TP consiste à écrire un serveur compatible avec Redis et Valkey. Ils communiquent avec le protocole **RESP**, un format texte très simple. Une commande `GET nom` est envoyée sous la forme d'un tableau de deux chaînes :
+
+```text
+*2\r\n$3\r\nGET\r\n$3\r\nnom\r\n
+```
+
+`*2` annonce un tableau de 2 éléments ; `$3` annonce une chaîne de **3 octets** ; `\r\n` termine chaque ligne.
+
+**Énoncé.**
+1. Écrivez `static String encodeCommand(String... words)` qui produit cette représentation. `encodeCommand("GET", "nom")` doit renvoyer exactement la chaîne ci-dessus.
+2. Attention aux accents : `encodeCommand("SET", "plat", "crème")` doit annoncer `$6` pour `crème` (6 octets en UTF-8), et non `$5`.
+3. Si Docker est installé, lancez un vrai serveur Valkey (`docker run --rm -p 6379:6379 valkey/valkey:8`) et envoyez-lui votre commande avec `printf '…' | nc localhost 6379`. Il doit répondre `+OK`.
+
+**Indice.** `String... words` (paramètre « varargs ») se manipule comme un tableau `String[]`. Pour la longueur en octets : §4.7.
+
+Le starter du TP fournit une classe `RespWriter` qui fait ce travail : comparez votre version à la sienne.
 
 ---
 
@@ -2219,3 +3072,108 @@ Réponses :
 3. Limiter le nombre d'essais par compte et par adresse IP (*rate limiting*), et rendre chaque code à usage unique. Le cas « deux clients utilisent le même code à usage unique au même instant » est une *race condition* : nous la traiterons en séance 4.
 
 </details>
+
+<details>
+<summary>Solution du défi 7 — Parler le protocole Redis à la main</summary>
+
+```java
+// Fichier : RespEncoder.java
+import java.nio.charset.StandardCharsets;
+
+static String encodeCommand(String... words) {
+    StringBuilder sb = new StringBuilder();
+    sb.append('*').append(words.length).append("\r\n");
+    for (String word : words) {
+        int bytes = word.getBytes(StandardCharsets.UTF_8).length;   // octets, pas caractères
+        sb.append('$').append(bytes).append("\r\n").append(word).append("\r\n");
+    }
+    return sb.toString();
+}
+
+/** Rend \r et \n visibles pour l'affichage. */
+static String visible(String s) {
+    return s.replace("\r", "\\r").replace("\n", "\\n");
+}
+
+void main() {
+    IO.println(visible(encodeCommand("GET", "nom")));
+    // *2\r\n$3\r\nGET\r\n$3\r\nnom\r\n
+    IO.println(visible(encodeCommand("SET", "plat", "crème")));
+    // *3\r\n$3\r\nSET\r\n$4\r\nplat\r\n$6\r\ncrème\r\n
+}
+```
+
+Pour l'envoyer à Valkey : `printf '*3\r\n$3\r\nSET\r\n$4\r\nplat\r\n$6\r\ncrème\r\n' | nc localhost 6379` affiche `+OK`. Avec `$5`, Valkey lit un octet de trop ou de moins, et répond par une erreur de protocole.
+
+</details>
+
+---
+
+## Annexe B — 🛠️ Lire les erreurs : les plus fréquentes
+
+Un message d'erreur Java dit presque toujours **où** et **quoi**. Lisez la **première** erreur, à la ligne indiquée ; les suivantes en sont souvent la conséquence.
+
+**Erreurs de compilation** (`javac`, ou soulignées en rouge dans IntelliJ) :
+
+| Message | Cause habituelle | Correction |
+|---|---|---|
+| `';' expected` | point-virgule oublié en fin d'instruction | ajouter le `;` à la position du `^` (ou juste avant) |
+| `cannot find symbol` … `symbol: variable total` | variable mal orthographiée, ou déclarée dans un autre bloc (§3.7) | vérifier l'orthographe et la portée |
+| `cannot find symbol` … `symbol: method printn(String)` | nom de méthode mal écrit, ou mauvais types d'arguments | vérifier le nom ; Ctrl+Espace propose les méthodes existantes |
+| `cannot find symbol` … `symbol: class List` | `import` manquant (dans une classe nommée) | Alt+Entrée → *Import class* |
+| `incompatible types: String cannot be converted to int` | `int quantity = "3";` | convertir : `Integer.parseInt("3")` (§4.6) |
+| `incompatible types: possible lossy conversion from double to int` | `int cents = 12.5 * 100;` | décider de l'arrondi, puis *cast* explicite (§2.7) |
+| `variable total might not have been initialized` | variable lue avant d'avoir reçu une valeur | l'initialiser à la déclaration (`int total = 0;`) |
+| `missing return statement` | un chemin de la méthode ne se termine pas par `return` | ajouter le `return` du cas manquant (souvent le `else`) |
+| `unclosed string literal` | guillemet fermant oublié | fermer le texte sur la même ligne |
+| `reached end of file while parsing` | accolade fermante `}` oubliée | Ctrl+Alt+L (reformater) montre où l'indentation déraille |
+| `class Order is public, should be declared in a file named Order.java` | nom du fichier différent du nom de la classe publique | renommer le fichier, ou la classe (Maj+F6) |
+| `non-static method fee() cannot be referenced from a static context` | appel d'une méthode sans `static` depuis `main` | déclarer la méthode `static` (§3.5) ; les objets arrivent en séance 2 |
+
+**Erreurs à l'exécution** (le programme compile, puis s'arrête) :
+
+| Message | Cause habituelle | Correction |
+|---|---|---|
+| `NullPointerException: Cannot invoke "String.length()" because "name" is null` | une variable vaut `null` (§2.2) | vérifier la provenance de la valeur ; tester `null` aux frontières |
+| `ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3` | indice `length` utilisé : les indices vont de `0` à `length - 1` (§3.4) | `i < t.length`, pas `i <= t.length` |
+| `NumberFormatException: For input string: "12a"` | texte non numérique passé à `parseInt` (§4.6) | valider avant, ou `try` / `catch` |
+| `ArithmeticException: / by zero` | division entière par zéro | tester le diviseur avant |
+| `ArithmeticException: integer overflow` | `Math.addExact` a détecté un débordement (§2.6) | c'est voulu : borner les entrées |
+| `Erreur : impossible de trouver ou de charger la classe principale Hello` | `java Hello` lancé dans le mauvais dossier, ou `javac` pas encore exécuté | `ls` pour vérifier que `Hello.class` est là |
+
+**Lire une pile d'appels** (*stack trace*) :
+
+```text
+Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3
+    at BasketStats.maxCents(BasketStats.java:7)
+    at BasketStats.main(BasketStats.java:41)
+```
+
+La première ligne donne le **type** d'erreur et son **message**. Les lignes `at` remontent les appels : l'erreur s'est produite dans `maxCents`, ligne 7, elle-même appelée par `main`, ligne 41. Commencez par la **première ligne `at` qui concerne votre code**. Dans IntelliJ, cliquez sur `BasketStats.java:7` pour y aller directement.
+
+> 🔵 Le nom de la variable dans le message de `NullPointerException` (`because "name" is null`) n'apparaît que si le code a été compilé avec les informations de débogage, ce que font IntelliJ et Maven. Avec `java Fichier.java`, vous verrez `"<local1>"` à la place.
+
+---
+
+## Annexe C — 🛠️ Pense-bête : vous venez de Python ou de C
+
+| Notion | Python | C | Java |
+|---|---|---|---|
+| Afficher | `print("x", n)` | `printf("x %d\n", n);` | `IO.println("x " + n);` |
+| Variable | `n = 3` | `int n = 3;` | `int n = 3;` ou `var n = 3;` |
+| Type vérifié | à l'exécution | à la compilation | à la compilation |
+| Bloc | indentation | `{ … }` | `{ … }` (indentez quand même) |
+| Fin d'instruction | fin de ligne | `;` | `;` |
+| Texte | `"x"` ou `'x'` | `char*` | `"x"` est une `String`, `'x'` est un `char` |
+| Comparer deux textes | `a == b` | `strcmp(a, b) == 0` | `a.equals(b)`, **jamais** `a == b` |
+| Et, ou, non | `and`, `or`, `not` | `&&`, `\|\|`, `!` | `&&`, `\|\|`, `!` |
+| Division entière | `7 // 2` | `7 / 2` | `7 / 2` (entre deux `int`) |
+| Entiers | taille illimitée | débordent (comportement indéfini) | débordent **en silence** (§2.6) |
+| Liste | `[1, 2]` | tableau, taille fixe | `int[] t = {1, 2};` (taille fixe), `List.of(1, 2)` |
+| Dictionnaire | `{"a": 1}` | — | `Map.of("a", 1)` |
+| Boucle sur une liste | `for x in items:` | `for (i = 0; i < n; i++)` | `for (var x : items)` |
+| Absence de valeur | `None` | `NULL` | `null` |
+| Fonction | `def f(x):` | `int f(int x) { … }` | `static int f(int x) { … }` |
+| Mémoire | automatique | `malloc` / `free` | automatique (ramasse-miettes) |
+| Lancer | `python f.py` | `gcc f.c && ./a.out` | `java F.java`, ou `javac` puis `java F` |
+

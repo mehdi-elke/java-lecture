@@ -20,7 +20,9 @@ Outils (dans `tools/`, après `npm install`) :
 
 - Français, **vouvoiement**. Ton direct, phrases courtes.
 - Structure de chaque notion : **Pourquoi ?** (le problème) → **Comment ?** (la solution Java) → **Exemple concret** (FoodFast) → **Piège** (❌ puis ✅).
-- Badges de niveau dans les titres : 🟢 Socle, 🔵 Approfondissement, 🟣 Bonus, 🔒 Sécurité.
+- Badges de niveau dans les titres : 🟢 Socle, 🔵 Approfondissement, 🟣 Bonus, 🔒 Sécurité, 🛠️ Atelier (à faire sur sa machine).
+- **Manipuler tôt et souvent.** Chaque partie se termine par un atelier **🛠️ À vous** : 2 à 4 exercices courts et progressifs, avec une durée indicative (⏱️), le résultat attendu et la solution repliée (`<details>`). Les exercices font taper, exécuter, observer (jshell, débogueur, `mvn test`) et réutilisent ce qui précède. Ils ne donnent jamais la solution d'une tâche du TP.
+- Ces ateliers sont une **variable d'ajustement** : l'enseignant les fait en séance, les garde pour le début du TP, ou les laisse en autonomie, selon le rythme du groupe.
 - ❌ et ✅ pour opposer le mauvais et le bon code.
 - Java 25, uniquement des fonctionnalités **finales**. Pas de preview, pas d'API obsolète (`Date`, `Vector`, `Hashtable`, `StringBuffer`, sérialisation comme bonne pratique, `printStackTrace`).
 - Modèle FoodFast : reprendre `Dish` (record), `DishSize`, `OrderStatus`, `User`/`Customer`/`Courier`, `Order`, `Discount`, `DeliveryPlatform` tels que définis dans `cours/modele/FoodFastModel.java`. Une séance peut ajouter des éléments (exceptions métier, repository JDBC…) sans contredire le modèle.
@@ -57,6 +59,7 @@ Règles :
   -->
   ```
 - **Interactivité** : au moins 2 slides « 🤔 Prédisez la sortie » par séance, et au moins une démo live annoncée en notes.
+- Les slides **🛠️** (installation, « Lire une erreur », « À vous — Partie N ») sont **optionnelles** : leurs notes commencent par « OPTIONNEL — variable d'ajustement » et elles ne comptent pas dans le budget ci-dessous. Une slide « 🛠️ À vous » par partie, qui résume l'atelier du support et y renvoie.
 - Budget : **60 à 75 min de cours**, soit environ **30 à 40 slides** (titre et transitions compris). Les notes donnent une durée par slide, et leur total doit tenir dans le budget.
 - Ordre de la séance : slide de titre → objectifs (les AA visés) → parties → récapitulatif « ce qu'il faut retenir » → slide « Pour aller plus loin » qui pointe vers le support.
 
@@ -84,6 +87,9 @@ Structure :
 - Numérotation `## 1.` / `### 1.2` **stable** : les slides y renvoient (`📖 Support §1.2`).
 - Tout ce qui a été coupé des slides pour tenir le temps (détails, cas limites, 🔵, 🟣) vit ici.
 - Chaque notion 🟢 a au moins **un exemple complet exécutable** et **un piège ❌ → ✅**.
+- Chaque partie `## N.` se termine par une sous-partie `### N.x 🛠️ À vous` (voir « Style commun »). Le dernier numéro de la partie : la numérotation des notions existantes ne bouge pas.
+- Deux parcours explicites en tête de support : débutants (ateliers, annexes « erreurs fréquentes ») et étudiants expérimentés (partie 🟣, défis, « ce qui a changé depuis Java 8 »).
+- Séance 1 seulement : une partie `## 0. 🛠️ Préparer son poste` (SDKMAN, IntelliJ, débogueur) et deux annexes : B « Lire les erreurs », C « Pense-bête Python / C ».
 - Encadrés sécurité : `> 🔒 **Sécurité** — …`
 - Liens vers la doc officielle Java 25 pour les API importantes.
 - Pas de limite de longueur stricte, mais viser la clarté (environ 600 à 1200 lignes par séance).

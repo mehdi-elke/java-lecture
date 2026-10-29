@@ -25,6 +25,7 @@ Rappelez que le support détaillé est partagé : les slides ne contiennent pas 
 
 **AA1** — Écrire, compiler et exécuter un programme Java, puis le construire et le tester avec Maven et JUnit.
 
+0. 🛠️ Préparer son poste : Java 25, IntelliJ, débogueur
 1. Du code source à la JVM : votre premier programme
 2. Variables, types et opérateurs
 3. Conditions, boucles, tableaux et méthodes
@@ -38,6 +39,87 @@ Durée : 2 min
 Message : à la fin de la séance, vous savez écrire une petite fonction métier ET la tester.
 Pour ceux qui connaissent déjà Java : le support contient une section 🟣 « Défis » (Luhn, mot de passe, César…). Vous pouvez l'attaquer dès maintenant.
 Question à la salle : qui a déjà écrit du Java ? du C ? du Python ? (ajuster le rythme)
+-->
+
+---
+
+<!-- _class: section -->
+
+# 0. 🛠️ Préparer son poste
+
+---
+
+## 🛠️ Installer Java 25 et Maven avec SDKMAN
+
+```text
+$ curl -s "https://get.sdkman.io" | bash
+$ sdk list java                 → repérer Temurin 25, colonne Identifier
+$ sdk install java 25.0.5.0+8-tem
+$ sdk install maven
+$ java -version                 → openjdk version "25…"
+$ mvn -v                        → … Java version: 25…
+```
+
+- macOS, Linux et **WSL**. Sans droits administrateur.
+- Windows sans WSL : IntelliJ télécharge le JDK (*Download JDK…*).
+- `sdk use java …` change de version dans ce terminal seulement.
+
+<div class="support">📖 Support §0.1 et §0.2 — Installer Java et Maven</div>
+
+<!--
+Durée : 5 min (si les postes ne sont pas prêts)
+OPTIONNEL — variable d'ajustement. Sauter si l'installation a été demandée avant la séance ; vérifier seulement java -version et mvn -v à main levée.
+Démo : sdk list java, montrer la colonne Identifier. Le numéro change à chaque mise à jour.
+🔒 curl | bash : on fait confiance au site. Le dire aux profils cyber, sans s'y attarder.
+-->
+
+---
+
+## 🛠️ IntelliJ : un premier projet en 2 minutes
+
+| *New Project* | Valeur |
+|---|---|
+| Build system | **Maven** |
+| JDK | **25** (sinon *Add JDK from disk* ou *Download JDK*) |
+| Add sample code | coché |
+| GroupId | `fr.foodfast` |
+
+- Code dans `src/main/java`, tests dans `src/test/java`.
+- ▶ dans la marge à côté de `main` : *Run*. Sortie en bas.
+- Taper `main` + Tab, `sout` + Tab.
+
+<div class="support">📖 Support §0.3 — IntelliJ IDEA</div>
+
+<!--
+Durée : 5 min
+OPTIONNEL — variable d'ajustement. Démo live : créer le projet, lancer Main, montrer la fenêtre Run.
+Montrer Alt+Entrée sur une erreur soulignée en rouge (§0.5).
+-->
+
+---
+
+## 🛠️ Le débogueur : voir le programme s'exécuter
+
+```java
+static int totalCents(int[] pricesCents) {
+    int total = 0;                              // ● point d'arrêt
+    for (int i = 1; i < pricesCents.length; i++) {
+        total = total + pricesCents[i];
+    }
+    return total;                    // {1250, 450, 800} → 1250 ?!
+}
+```
+
+1. Clic dans la marge : **point d'arrêt**. 2. ▶ → **Debug**.
+3. **F8** : ligne suivante. 4. Regarder `i` et `total`. 5. **F9** : reprendre.
+
+<div class="support">📖 Support §0.4 — Le débogueur</div>
+
+<!--
+Durée : 5 min
+OPTIONNEL — variable d'ajustement. Mais fortement conseillé : c'est l'outil qui débloque les débutants en TP.
+Démo live : poser le point d'arrêt, F8, faire constater à la salle que i commence à 1.
+Question à la salle : où est le bug ? (réponse : i = 1, la case 0 est oubliée)
 -->
 
 ---
@@ -155,6 +237,49 @@ System.out.println et IO.println font la même chose ici.
 <!--
 Durée : 2 min
 Transition : aujourd'hui, les exemples sont en compact source file. À la fin de la séance, on les range dans une classe pour les tester avec Maven.
+-->
+
+---
+
+## 🛠️ Lire une erreur : où, puis quoi
+
+```text
+Hello.java:2: error: cannot find symbol
+    IO.printn("Bienvenue chez FoodFast !");
+      ^
+  symbol:   method printn(String)
+  location: class IO
+```
+
+- **Où** : fichier `Hello.java`, ligne `2`, colonne du `^`.
+- **Quoi** : `cannot find symbol`, un nom inconnu : `printn`.
+- Corriger la **première** erreur, puis recompiler.
+
+<div class="support">📖 Support annexe B — Les erreurs les plus fréquentes</div>
+
+<!--
+Durée : 2 min
+OPTIONNEL — variable d'ajustement. Utile si beaucoup de débutants. cannot find symbol est l'erreur la plus fréquente : faute de frappe, variable hors de portée, import manquant.
+L'annexe B donne les 12 erreurs de compilation et les 6 erreurs d'exécution les plus courantes, avec la correction.
+-->
+
+---
+
+## 🛠️ À vous — Partie 1 (15 à 20 min)
+
+1. **Compiler à la main** `Hello.java`, puis provoquer trois erreurs et lire les messages.
+2. **Dans IntelliJ** : une classe `Welcome` qui accueille le restaurant passé en argument.
+3. 🔵 `javap -c Hello` : lire le bytecode.
+
+> Le but n'est pas d'avoir juste : c'est d'avoir **tapé, lancé et lu**.
+
+<div class="support">📖 Support §1.6 — À vous</div>
+
+<!--
+Durée : 15 à 20 min
+OPTIONNEL — variable d'ajustement. À placer ici, ou à garder pour le début du TP selon le rythme.
+Passer dans les rangs : vérifier que chacun a bien un java -version en 25 et un programme qui tourne dans IntelliJ.
+Les avancés : partie 6 du support (§6.7 Java moderne, défis).
 -->
 
 ---
@@ -391,6 +516,23 @@ Message : un arrêt franc vaut mieux qu’un résultat faux. On verra en partie 
 
 ---
 
+## 🛠️ À vous — Partie 2 (20 à 30 min)
+
+1. **jshell** : prédire puis vérifier `7 / 2`, `"Total : " + 1 + 2`, `0.1 + 0.2`…
+2. **Une ligne de ticket** : `2 x Margherita = 25,00 €`, avec `formatEuros(int cents)`.
+3. **Au débogueur** : regarder un compteur `int` devenir négatif, puis `Math.addExact`.
+
+> Prédire **avant** d'exécuter : c'est là qu'on apprend.
+
+<div class="support">📖 Support §2.8 — À vous</div>
+
+<!--
+Durée : 20 à 30 min
+OPTIONNEL — variable d'ajustement. L'exercice 1 peut se faire en 5 min collectivement, à main levée, si le temps manque.
+-->
+
+---
+
 <!-- _class: section -->
 
 # 3. Conditions, boucles, tableaux, méthodes
@@ -598,6 +740,24 @@ Piège : get renvoie null si la clé est absente ; stock.get("Sushi") - 1 lève 
 
 ---
 
+## 🛠️ À vous — Partie 3 (30 à 40 min)
+
+1. `dayLabel(int day)` : le jour de la semaine, avec un `switch`.
+2. `sumUpTo(n)` et `sumEvenUpTo(n)`, suivies **au débogueur**.
+3. `BasketStats` : maximum, nombre au-dessus d'un seuil, moyenne… et le panier vide ?
+
+> L'exercice 3 resservira au §5.8 : gardez-le.
+
+<div class="support">📖 Support §3.9 — À vous</div>
+
+<!--
+Durée : 30 à 40 min
+OPTIONNEL — variable d'ajustement. Les exercices 1 et 2 suffisent si le temps manque. Le 3 est réutilisé pour les tests JUnit (§5.8).
+Question pour le panier vide : renvoyer 0 ou refuser ? (refuser : 0 serait un mensonge silencieux)
+-->
+
+---
+
 <!-- _class: section -->
 
 # 4. Chaînes de caractères et validation
@@ -735,6 +895,23 @@ Message : une donnée extérieure est toujours du texte, et la conversion peut �
 🔒 Un programme qui s'arrête sur une entrée invalide, c'est un déni de service gratuit pour un attaquant.
 Piège à signaler : parseLong est permissif ("+5", "007", "٣" sont acceptés). Si la spécification est plus stricte, valider le format AVANT (§4.3).
 🔵 Dans le support §4.7 : caractères et octets, "é".length() vaut 1 mais 2 octets en UTF-8.
+-->
+
+---
+
+## 🛠️ À vous — Partie 4 (25 à 35 min)
+
+1. `normalizePromoCode` : `"  promo10 "` devient `"PROMO10"`, puis on valide.
+2. `parseQuantity` avec `try` / `catch`… et le piège du chiffre `"٣"` 🔒
+3. Un **ticket complet** avec `StringBuilder`.
+4. 🔵 `"Crème brûlée"` : combien de caractères, combien d'octets ?
+
+<div class="support">📖 Support §4.8 — À vous</div>
+
+<!--
+Durée : 25 à 35 min
+OPTIONNEL — variable d'ajustement. L'exercice 2 est le plus important pour les profils cyber : Integer.parseInt accepte les chiffres Unicode, la liste blanche du §4.3 non.
+L'exercice 4 prépare directement le TP (le protocole compte en octets).
 -->
 
 ---
@@ -886,6 +1063,25 @@ Durée : 2 min
 Les bugs se cachent aux frontières : 20 accepté, 21 refusé. Testez les deux côtés de chaque borne.
 Pour les profils cyber : un test d'entrée invalide est un test de sécurité.
 Bonus dans le support : @ParameterizedTest pour tester 10 entrées en un seul test.
+-->
+
+---
+
+## 🛠️ À vous — Partie 5 (30 à 40 min)
+
+1. Un projet **Maven** dans IntelliJ, `BasketStats` dans `src/main/java`.
+2. **Trois tests** : un cas nominal, un cas limite, une entrée invalide.
+3. Lancer `mvn test` **et** ▶▶ dans IntelliJ.
+4. **Casser exprès** (`>` devient `>=`) : lire `expected` / `but was`.
+
+> C'est exactement ainsi que commence le TP.
+
+<div class="support">📖 Support §5.8 — À vous</div>
+
+<!--
+Durée : 30 à 40 min
+OPTIONNEL — variable d'ajustement. Le plus utile des ateliers : à faire en priorité si un seul atelier est possible, éventuellement en début de TP.
+Vérifier que chacun voit BUILD SUCCESS en terminal : c'est la preuve que Java 25 + Maven + JUnit fonctionnent.
 -->
 
 ---
