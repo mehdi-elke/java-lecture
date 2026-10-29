@@ -1,0 +1,16 @@
+# Contenu enseignant (corrigés, examens, QCM) : dépôt git séparé, jamais publié ici
+/prive
+
+# Fichiers générés
+/outputs
+/tools/node_modules
+/tools/lib
+target/
+
+# Fichiers locaux
+.DS_Store
+.claude
+.idea/
+.vscode/
+CLAUDE.md
+GEMINI.md

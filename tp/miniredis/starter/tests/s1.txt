@@ -1,0 +1,90 @@
+# Fournis : SET, GET
+SET nom Ada
+GET nom
+GET absente
+SET "nom complet" "Ada Lovelace"
+GET "nom complet"
+GET
+SET seul
+FOO bar baz
+
+# 🟢 PING et ECHO
+PING
+PING "bonjour le monde"
+PING a b
+ECHO salut
+ECHO
+ECHO a b
+
+# 🟢 DEL et EXISTS
+SET a 1
+SET b 2
+EXISTS a
+EXISTS a a absente b
+EXISTS
+DEL a absente
+DEL a
+DEL
+EXISTS a b
+
+# 🟢 STRLEN, APPEND, MGET
+SET texte bonjour
+STRLEN texte
+STRLEN absente
+APPEND texte " monde"
+GET texte
+APPEND nouvelle abc
+GET nouvelle
+MGET texte absente nouvelle
+MGET
+STRLEN
+
+# 🟢 INCR, DECR, INCRBY, DECRBY
+INCR compteur
+INCR compteur
+DECR compteur
+INCRBY compteur 10
+DECRBY compteur 3
+GET compteur
+INCRBY compteur
+SET mot abc
+INCR mot
+INCRBY compteur abc
+SET max 9223372036854775807
+INCR max
+SET min -9223372036854775808
+DECR min
+INCRBY compteur 9223372036854775807
+DECRBY min 1
+
+# 🔵 Parsing strict des entiers
+INCRBY compteur +5
+INCRBY compteur 007
+INCRBY compteur " 5"
+INCRBY compteur 5x
+INCRBY compteur -3
+SET zero -0
+INCR zero
+INCRBY compteur 99999999999999999999
+
+# 🔵 Octets et caractères
+SET accent é
+STRLEN accent
+APPEND accent té
+STRLEN accent
+GET accent
+
+# 🟣 KEYS
+FLUSHALL
+SET user:1 a
+SET user:2 b
+SET user:10 c
+SET admin x
+KEYS *
+KEYS user:*
+KEYS user:?
+KEYS *1*
+KEYS [au]*
+KEYS user:[12]
+KEYS nothing*
+KEYS

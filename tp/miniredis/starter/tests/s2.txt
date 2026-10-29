@@ -1,0 +1,86 @@
+# Les commandes de la séance 1 doivent toujours fonctionner
+SET k v
+GET k
+INCR n
+ECHO ok
+
+# 🟢 Listes
+RPUSH liste a b c
+LPUSH liste z y
+LRANGE liste 0 -1
+LRANGE liste 1 2
+LRANGE liste -2 -1
+LRANGE liste 0 100
+LRANGE liste 5 10
+LRANGE liste -100 1
+LRANGE liste 3 1
+LRANGE liste 0 x
+LRANGE absente 0 -1
+LLEN liste
+LLEN absente
+LPOP liste
+RPOP liste
+LRANGE liste 0 -1
+LPOP absente
+RPUSH
+RPUSH seule
+LLEN
+
+# 🟢 Une liste vidée disparaît
+RPUSH courte x
+LPOP courte
+EXISTS courte
+TYPE courte
+
+# 🟢 TYPE et WRONGTYPE
+TYPE k
+TYPE liste
+TYPE absente
+GET liste
+INCR liste
+APPEND liste x
+STRLEN liste
+RPUSH k x
+LLEN k
+LRANGE k 0 -1
+MGET k liste
+SET liste maintenant-une-chaine
+TYPE liste
+
+# 🔵 Expiration
+SET session abc
+TTL session
+TTL absente
+EXPIRE session 100
+TTL session
+PERSIST session
+TTL session
+PERSIST session
+EXPIRE absente 10
+EXPIRE session abc
+SET session2 abc EX 100
+TTL session2
+SET session2 nouvelle
+TTL session2
+SET session3 abc EX 0
+SET session3 abc EX x
+SET session3 abc FOO
+SET courte abc EX 1
+EXPIRE session -1
+EXISTS session
+!sleep 1100
+GET courte
+EXISTS courte
+TTL courte
+
+# 🟣 Ensembles
+SADD fruits pomme poire pomme
+SADD fruits kiwi
+SMEMBERS fruits
+SISMEMBER fruits pomme
+SISMEMBER fruits banane
+SCARD fruits
+SCARD absent
+TYPE fruits
+GET fruits
+SADD k x

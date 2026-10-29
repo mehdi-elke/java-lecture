@@ -1,0 +1,23 @@
+# Les séances précédentes doivent toujours fonctionner
+SET k v
+RPUSH l a b
+LRANGE l 0 -1
+GET l
+
+# 🟢 KEYS, DBSIZE, MGET avec les streams
+FLUSHALL
+DBSIZE
+SET user:1 a
+SET user:2 b
+RPUSH user:liste x
+SET admin x
+DBSIZE
+KEYS user:*
+KEYS *
+KEYS absent*
+MGET user:1 absente user:liste user:2
+DBSIZE extra
+
+# 🟢 Persistance : SAVE répond OK (le rechargement se teste en relançant le serveur)
+SAVE
+SAVE extra

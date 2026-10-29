@@ -1,0 +1,77 @@
+/* Mise en page des supports détaillés (HTML et PDF). */
+:root {
+  --accent: #c2410c;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--ink);
+  font: 16px/1.6 "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+main { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
+
+h1 { color: var(--accent); font-size: 2em; margin: 0 0 .4em; }
+h2 {
+  color: var(--accent);
+  font-size: 1.5em;
+  margin: 2em 0 .6em;
+  padding-bottom: .2em;
+  border-bottom: 2px solid #fed7aa;
+  break-after: avoid;
+}
+h3 { font-size: 1.2em; margin: 1.6em 0 .5em; break-after: avoid; }
+h4 { font-size: 1.05em; margin: 1.2em 0 .4em; break-after: avoid; }
+
+a { color: var(--accent); }
+
+pre {
+  background: #f6f8fa;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+pre code { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+:not(pre) > code {
+  background: #fff7ed;
+  color: #9a3412;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: .9em;
+}
+
+blockquote {
+  margin: 1em 0;
+  padding: .6em 1em;
+  border-left: 5px solid var(--accent);
+  background: #fff7ed;
+}
+blockquote p { margin: .3em 0; }
+
+table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: .95em; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+th { background: #fff7ed; }
+
+nav.toc {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin: 1.2em 0 2em;
+  background: #fafafa;
+}
+nav.toc ul { list-style: none; padding-left: 0; margin: .4em 0 0; }
+nav.toc li.h3 { padding-left: 1.4em; font-size: .92em; }
+nav.toc a { text-decoration: none; }
+
+@media print {
+  main { max-width: none; padding: 0; }
+  pre { white-space: pre-wrap; overflow: visible; break-inside: avoid; }
+  nav.toc { break-after: page; }
+  a { color: inherit; text-decoration: none; }
+}

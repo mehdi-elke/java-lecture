@@ -1,0 +1,111 @@
+/* @theme foodfast */
+/*
+ * Thème Marp du cours Java (FoodFast).
+ * Basé sur le thème "default", avec une typographie calibrée pour que
+ * le contenu tienne dans une slide 1280x720.
+ * Vérifier l'absence de débordement : cd tools && npm run check
+ */
+@import 'default';
+
+:root {
+  --ff-accent: #c2410c;      /* orange FoodFast */
+  --ff-ink: #1f2937;
+  --ff-muted: #6b7280;
+  --ff-code-bg: #f6f8fa;
+  --ff-socle: #15803d;
+  --ff-approfondi: #1d4ed8;
+  --ff-bonus: #7e22ce;
+  --ff-secu: #b91c1c;
+}
+
+section {
+  font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 26px;
+  line-height: 1.4;
+  color: var(--ff-ink);
+  padding: 48px 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+section::after { /* pagination */
+  font-size: 16px;
+  color: var(--ff-muted);
+}
+
+h1 { font-size: 46px; color: var(--ff-accent); margin: 0 0 16px; }
+h2 {
+  font-size: 36px;
+  color: var(--ff-accent);
+  margin: 0 0 18px;
+  padding-bottom: 6px;
+  border-bottom: 3px solid #fed7aa;
+}
+h3 { font-size: 28px; margin: 12px 0 8px; }
+
+p, li { margin: 6px 0; }
+ul, ol { margin: 6px 0; padding-left: 1.2em; }
+
+/* Code */
+pre {
+  font-size: 19px;
+  line-height: 1.35;
+  background: var(--ff-code-bg);
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 10px 0;
+}
+pre code { white-space: pre; }
+:not(pre) > code {
+  font-size: 0.9em;
+  background: #fff7ed;
+  color: #9a3412;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Tableaux */
+table { font-size: 22px; border-collapse: collapse; margin: 8px 0; }
+th { background: #fff7ed; }
+th, td { padding: 6px 12px; border: 1px solid #e5e7eb; }
+
+/* Encadrés : > texte (citation) = message clé */
+blockquote {
+  border-left: 6px solid var(--ff-accent);
+  background: #fff7ed;
+  color: var(--ff-ink);
+  padding: 10px 18px;
+  margin: 12px 0;
+  font-size: 0.95em;
+}
+
+/* Deux colonnes : <div class="cols"><div>…</div><div>…</div></div> */
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.cols > div > pre { margin-top: 0; }
+
+/* Variantes de slides : <!-- _class: lead --> etc. */
+section.lead {
+  justify-content: center;
+  text-align: center;
+}
+section.lead h1 { font-size: 60px; }
+section.lead h2 { border: none; }
+
+section.section {          /* slide de transition entre parties */
+  justify-content: center;
+  background: var(--ff-accent);
+  color: #fff;
+}
+section.section h1, section.section h2 { color: #fff; border: none; }
+
+section.small { font-size: 22px; }
+section.small pre { font-size: 17px; }
+
+/* Rappel du support détaillé */
+.support {
+  margin-top: auto;
+  font-size: 18px;
+  color: var(--ff-muted);
+}

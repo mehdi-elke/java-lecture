@@ -1,0 +1,21 @@
+# 🟢 SET NX et XX
+SET verrou a NX
+SET verrou b NX
+GET verrou
+SET verrou c XX
+GET verrou
+SET autre c XX
+GET autre
+SET verrou d NX XX
+SET verrou e EX 100 NX
+SET nouveau e NX EX 100
+TTL nouveau
+SETNX verrou f
+SETNX libre f
+GET libre
+
+# Les séances précédentes doivent toujours fonctionner
+INCR compteur
+RPUSH l a
+LRANGE l 0 -1
+SAVE

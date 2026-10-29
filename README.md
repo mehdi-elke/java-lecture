@@ -1,49 +1,58 @@
-# Java Lecture - Supports de Cours
+# Java — M1 Informatique
 
-Ce dépôt regroupe l'ensemble des ressources pédagogiques dédiées à l'apprentissage du langage Java. 
+Supports du module Java (Java 25 LTS) : 16 heures, en 4 séances de 4 h. Chaque séance commence par environ 1 h de cours, suivie de TP.
 
-L'approche utilisée ici repose sur une méthodologie structurée, détaillant la distinction entre l'acquisition de connaissances théoriques et le développement de compétences pratiques. Pour plus de détails sur la philosophie derrière cette organisation, vous pouvez consulter l'article dédié sur mon blog : [Lien vers ton article].
+| Séance | Thème | TP Mini-Redis |
+|---|---|---|
+| 1 | Bases du langage, Maven et JUnit | Premières commandes : `PING`, `INCR`, `APPEND`… |
+| 2 | Classes, `record`, `enum`, héritage, interfaces, collections | Réorganisation en classes, listes, expiration des clés |
+| 3 | Lambdas, streams, exceptions, fichiers | Robustesse, sauvegarde sur fichier |
+| 4 | Concurrence, JDBC, sécurité | Plusieurs clients, sauvegarde H2, injection SQL |
 
-## Objectifs Pédagogiques
+## Le dépôt
 
-L'enseignement est conçu pour amener les apprenants vers une autonomie technique en se concentrant sur des résultats concrets.
-
-### Savoir (Connaissances)
-* Compréhension de la JVM et de la gestion de la mémoire (Heap et Stack).
-* Syntaxe fondamentale et programmation orientée objet (POO).
-* Utilisation des classes utilitaires standards.
-
-### Savoir-faire (Compétences)
-* Configuration d'un environnement de développement complet (JDK, IDE).
-* Modélisation de classes répondant à des problématiques métier.
-* Mise en place de tests et conteneurisation de l'application via Docker.
-
-## Approche Doc-as-Code
-
-Les supports de présentation sont gérés comme du code source. Ils sont rédigés au format Markdown et transformés en diapositives via l'outil Marp. 
-
-Cette méthode permet :
-* Un suivi des modifications via Git.
-* Une maintenance simplifiée du contenu technique.
-* Une génération rapide de supports aux formats PDF ou HTML.
-
-### Utilisation des slides
-1. Ouvrez le dossier contenant les fichiers .md dans Visual Studio Code.
-2. Utilisez l'extension Marp for VS Code pour visualiser le rendu.
-3. Exportez le support via la commande d'export de l'extension si nécessaire.
-
-## Structure du Dépôt
-
+```
 .
-├── cours/             # Présentations au format Markdown (Marp)
-├── tp/  # Ennoncé du tp fil rouge et des premiers exercices
-└── README.md
+├── cours/
+│   ├── cadrage.md        # Objectifs, acquis visés, choix de contenu
+│   ├── CONVENTIONS.md    # Règles de rédaction des slides, des supports et du code
+│   ├── slides/           # Présentations projetées en cours (Marp)
+│   ├── supports/         # Supports détaillés, à lire après le cours
+│   ├── modele/           # Exemple de référence utilisé dans le cours (FoodFast)
+│   └── theme/            # Thème Marp
+├── tp/
+│   └── miniredis/
+│       ├── enonce/       # Énoncés, un par séance
+│       └── starter/      # Projet Maven de départ
+├── tools/                # Vérification et génération des supports (Node.js)
+└── build_support.sh
+```
 
-## Projet Fil Rouge
+Deux supports par séance :
+* **Slides** (`cours/slides/`) : ce qui est projeté en cours, volontairement léger.
+* **Support détaillé** (`cours/supports/`) : les explications complètes, le code complet et les approfondissements.
 
-Le cours s'articule autour d'un projet progressif. L'objectif est de ne pas se limiter à des exercices isolés mais de construire une application cohérente au fil des sessions. 
+## Le TP : un mini-Redis
 
+Vous écrivez en Java un serveur clé-valeur compatible avec le vrai client `valkey-cli`. La règle est simple : votre serveur doit répondre **exactement comme Valkey**. L'outil `tools/Compare.java` envoie les mêmes commandes aux deux serveurs et affiche les différences. Tout commence dans `tp/miniredis/enonce/`.
 
-## Contributions et Feedback
+Prérequis : JDK 25, Maven, et Docker pour lancer le Valkey de référence.
 
-Ce contenu est voué à évoluer. Si vous constatez des erreurs ou si vous avez des suggestions pour améliorer la pédagogie des supports, n'hésitez pas à ouvrir une Issue ou une Pull Request sur ce dépôt.
+## Générer les supports
+
+Prérequis : Node.js 20+, JDK 25, Google Chrome.
+
+```bash
+./build_support.sh               # vérifie puis génère outputs/slides et outputs/supports (HTML et PDF)
+./build_support.sh --skip-checks # génère sans vérifier
+```
+
+Le script vérifie d'abord deux choses :
+* aucune slide ne déborde du cadre 1280x720 (`tools/check-slides.mjs`) ;
+* chaque exemple Java marqué `// Fichier :` compile et s'exécute en Java 25 (`tools/check-java.mjs`).
+
+Pour prévisualiser les slides, utilisez l'extension Marp for VS Code avec le thème `cours/theme/foodfast.css` (réglage `markdown.marp.themes`).
+
+## Contributions
+
+Vous avez trouvé une erreur ou une explication peu claire ? Ouvrez une Issue ou une Pull Request.

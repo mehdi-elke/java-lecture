@@ -1,0 +1,17 @@
+{
+  "name": "java-cours-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node check-slides.mjs",
+    "build": "node build.mjs",
+    "check-java": "node check-java.mjs"
+  },
+  "dependencies": {
+    "@marp-team/marp-cli": "4.2.3",
+    "@marp-team/marp-core": "4.1.0",
+    "highlight.js": "11.11.1",
+    "markdown-it": "14.1.0",
+    "puppeteer-core": "24.10.0"
+  }
+}
