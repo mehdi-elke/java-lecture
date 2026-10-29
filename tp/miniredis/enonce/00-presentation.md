@@ -118,11 +118,15 @@ Chaque énoncé propose trois niveaux. Avancez à votre rythme.
 - **Des tests JUnit** : chaque commande que vous écrivez a au moins un test dans `CommandProcessorTest`. Un test s'écrit sans réseau : `run("INCR", "compteur")`.
 - **Les signatures imposées** dans les énoncés doivent être respectées à la lettre. Le code fourni plus tard, et les tests de correction, en dépendent.
 - **Git** : un commit au moins à chaque tâche terminée. Le dépôt est rendu à la fin des séances 2 et 4.
-- **L'IA est autorisée** : vous devrez expliquer et modifier votre code à l'oral, en 3 minutes, sans aide.
+- **L'IA est autorisée**, mais vous êtes évalués sans elle : vous devrez expliquer et modifier votre code à l'oral, en 3 minutes. Cherchez 15 minutes seul avant de demander, demandez une explication plutôt que du code, et laissez Valkey et vos tests trancher : l'IA oublie souvent les cas limites.
 
 ## Notation
 
-Elle repose sur des QCM courts en début de séance, deux jalons (dépôt Git évalué par des tests cachés et par `Compare`) et une courte explication orale de votre code en séance 4.
+Elle repose sur :
+
+- des QCM courts en début de séances 2, 3 et 4 ;
+- un rendu avant la séance 2 ([consigne](rendu-seance1.md)), puis deux jalons en fin de séances 2 et 4 (dépôt Git évalué par des tests cachés et par `Compare`) ;
+- **deux passages de 3 minutes** avec l'enseignant, en séances 2 et 4 : expliquer puis modifier votre propre code, sans IA.
 
 ## Le plan
 

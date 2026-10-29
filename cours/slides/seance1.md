@@ -21,6 +21,69 @@ Rappelez que le support détaillé est partagé : les slides ne contiennent pas 
 
 ---
 
+## Le module : 4 séances de 4 heures
+
+| Séance | Thème |
+|---|---|
+| **1 — aujourd'hui** | Les bases du langage |
+| 2 — dans un mois | Du code aux objets |
+| 3 | Robuste et persistant |
+| 4 | Plusieurs clients, SQL et sécurité 🔒 |
+
+Chaque séance : **cours court** entrecoupé d'**ateliers** 🛠️ sur votre machine, puis **TP en classe**.
+Le TP, fil rouge des 4 séances : écrire **votre propre serveur compatible Redis**.
+
+<!--
+Durée : 1 min (présentation personnelle comprise)
+Se présenter en une phrase : parcours, ce qu'on fait au quotidien avec Java.
+-->
+
+---
+
+## Comment vous êtes évalués
+
+**Plusieurs notes courtes, pas d'examen final.** On note surtout ce que vous savez **expliquer**.
+
+| Quand | Quoi |
+|---|---|
+| Fin de séance 1 | QCM **diagnostique**, non noté |
+| Avant la séance 2 | TP rendu sur GitHub : fait, et `mvn test` passe |
+| Séances 2, 3, 4 | QCM de 10 min sur la séance précédente |
+| Séance 2 | **3 min** avec moi : expliquer et modifier votre code du TP |
+| Fin des séances 2 et 4 | TP rendu sur GitHub, comparé à Valkey |
+| Séance 4 | **3 min** avec moi : expliquer une correction de sécurité |
+
+<!--
+Durée : 2 min
+Poids proposés (prive/tp-miniredis/README.md §5, à valider avant d'annoncer des chiffres) : rendu S1 5 %, vérification S2 10 %, QCM 3 × 10 %, jalon S2 20 %, jalon S4 25 %, oral S4 10 %.
+Message : le code rendu compte peu en lui-même. Ce qui compte, c'est ce que vous savez en faire devant moi.
+-->
+
+---
+
+## Les règles du jeu
+
+**Vous êtes adultes, je vous traite en adultes.**
+- Vous gérez votre rythme : 🟢 pour tous, 🔵 🟣 pour aller plus loin.
+- Vous êtes autonomes : vous cherchez, puis vous demandez **quand vous bloquez**.
+
+**L'IA est autorisée. Mais :**
+- **Vous êtes évalués sans elle** : QCM, et 3 minutes pour expliquer et modifier **votre** code.
+- **Cherchez 15 min seul** avant de demander. Demandez une **explication**, pas du code.
+- **Valkey et vos tests ont le dernier mot**, pas l'IA. Elle oublie souvent les cas limites.
+- **Pas de code que vous ne savez pas expliquer** dans votre dépôt.
+
+<!--
+Durée : 2 min, puis questions
+« Je ne surveille pas vos écrans. Je vous demanderai simplement d'expliquer et de modifier votre code : si c'est l'IA qui a appris, ce n'est pas vous. »
+Pourquoi chercher seul d'abord : c'est quand on bloque qu'on apprend. Une réponse immédiate donne un code qui marche, pas la compréhension.
+Pour les profils cyber : relire du code qu'on n'a pas écrit et y trouver la faille, c'est le métier.
+Les supports complets sont partagés à la fin de la séance.
+Terminer par : « Est-ce que c'est clair pour tout le monde ? Des questions avant de commencer ? » Attendre vraiment la réponse.
+-->
+
+---
+
 ## Objectifs de la séance
 
 **AA1** — Écrire, compiler et exécuter un programme Java, puis le construire et le tester avec Maven et JUnit.

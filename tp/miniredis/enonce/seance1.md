@@ -131,3 +131,5 @@ Allez plus loin avec `[^a]` (tout sauf a) et `\*` (une vraie étoile), en compar
 - [ ] `java tools/Compare.java tests/s1.txt` : les sections 🟢 sont toutes `✓`.
 - [ ] Un test JUnit par commande.
 - [ ] Tout est commité.
+
+Ce qui est attendu pour le rendu, et comment mettre votre projet sur GitHub : [rendu de la séance 1](rendu-seance1.md).

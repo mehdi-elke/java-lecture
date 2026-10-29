@@ -35,6 +35,35 @@ Document de référence : il fixe **ce que le cours doit transmettre**. Toute r�
 5. **Deux supports par séance** :
    - **Slides** (`cours/slides/`) pour la présentation : peu de texte, du code court, une idée par slide.
    - **Support détaillé** (`cours/supports/`) à partager : explications complètes, code complet et compilé, approfondissements et bonus.
+6. **IA : autorisée, mais l'évaluation porte sur ce qu'elle ne fait pas à la place de l'étudiant** (décidé le 2026-10-29, voir « IA et évaluation » ci-dessous).
+7. **Évaluation multi-notes** : QCM diagnostique non noté en fin de S1 ; rendu S1 avant S2 ; QCM en début de S2, S3, S4 ; vérification de 3 min en S2 ; jalons en fin de S2 et S4 ; explication de 3 min en S4. Barème et grilles : `prive/tp-miniredis/README.md` §5.
+8. **Séance de 4h = 3h30 effectives** : deux pauses de 15 min.
+
+## IA et évaluation
+
+**Constat.** En 2026, un TP qui fonctionne ne prouve plus que l'étudiant sait coder : une IA le produit en quelques minutes. Évaluer le code rendu revient à évaluer l'accès à l'outil, et creuse l'écart entre ceux qui paient un abonnement et les autres.
+
+**Le vrai risque pédagogique n'est pas la triche**, c'est que les débutants sautent l'étape où l'on apprend : rester bloqué, chercher, comprendre. Ils obtiennent un code qui marche sans le modèle mental qui va avec, et le découvrent en S3 ou S4, quand le projet grossit.
+
+**Ce qu'on évalue donc** : ce que l'étudiant sait faire **devant l'enseignant, sans IA** :
+- **prédire** ce que fait un code (QCM « prédisez la sortie ») ;
+- **expliquer** son propre code ;
+- **modifier** ce code pour une nouvelle règle ;
+- **juger** si une réponse est juste, avec un test ou la référence Valkey.
+
+Le code rendu compte peu en lui-même (rendu S1 : 5 %, fait / `mvn test` passe). Les passages de 3 min en S2 et S4 (banque de questions : `prive/tp-miniredis/verification-s2.md`) et les QCM portent l'essentiel.
+
+**Règles annoncées en S1** (slide « Les règles du jeu ») :
+1. L'IA est autorisée ; vous êtes évalués sans elle.
+2. Cherchez 15 min seul avant de demander ; demandez une explication, pas du code.
+3. Valkey et vos tests ont le dernier mot, pas l'IA.
+4. Pas de code que vous ne savez pas expliquer dans votre dépôt.
+
+**Pourquoi le TP s'y prête** : « fais comme Valkey » + `Compare` rend la sortie de l'IA vérifiable. Les cas limites (`EXISTS a a`, débordement d'`INCR`, `+5` refusé) sont souvent ratés par un code généré. Pour les profils cyber, relire du code qu'on n'a pas écrit et y trouver la faille est le métier.
+
+**Piste à tester** : un atelier en S2 ou S3, « demandez `DEL` à l'IA, puis trouvez avec `Compare` ce qui ne va pas » (15 min).
+
+**Limites assumées** : l'oral prend du temps (≈ 1h pour 20 étudiants) et reste en partie subjectif ; la grille à 3 niveaux et la banque commune le rendent défendable, pas parfait. À réévaluer après la S2, en comparant les rendus à ce que les étudiants savent expliquer.
 
 ## Niveaux
 
@@ -122,7 +151,8 @@ L'ordre est imposé, car chaque notion s'appuie sur la précédente :
 
 ## Ce qui reste à faire après les supports
 
-- Nouveau TP (domaine à définir).
-- Dispositif d'évaluation multi-notes.
-- QCM.
+- ~~Nouveau TP~~ : fait, Mini-Redis (`tp/miniredis/`).
+- ~~Dispositif d'évaluation multi-notes~~ : fait (décision 7).
+- QCM : diagnostique S1 fait (`prive/qcms/`) ; QCM de début de S2, S3, S4 à écrire.
+- Section « fichiers » du support S3 (`Path`, `Files`, `ATOMIC_MOVE`, path traversal) : référencée par le TP, absente du support.
 - Tuteur IA (`AGENTS.md`, Gem, GPT…).
