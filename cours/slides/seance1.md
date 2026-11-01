@@ -821,6 +821,21 @@ Question pour le panier vide : renvoyer 0 ou refuser ? (refuser : 0 serait un me
 
 ---
 
+<!-- _class: lead -->
+<!-- _paginate: false -->
+
+# ☕ Pause — 15 minutes
+
+Reprise : **partie 4, chaînes de caractères et validation**
+
+<!--
+Durée : 15 min
+Annoncer l'heure de reprise à voix haute et l'écrire au tableau.
+Si l'atelier 3 n'a pas été fait : il est dans le support (§3.9), à faire à la maison.
+-->
+
+---
+
 <!-- _class: section -->
 
 # 4. Chaînes de caractères et validation
@@ -1199,4 +1214,71 @@ Vous allez écrire **votre propre serveur compatible Redis / Valkey**. Aujourd'h
 <!--
 Durée : 1 min
 Transition vers le TP. Le code réseau et le protocole sont fournis : on écrit les commandes.
+-->
+
+---
+
+## 🛠️ TP — Prise en main (25 min)
+
+1. **Récupérer le projet** : [github.com/mehdi-elke/java-lecture](https://github.com/mehdi-elke/java-lecture) → *Code* → *Download ZIP*. Copiez le dossier `tp/miniredis/starter` où vous voulez.
+2. **L'ouvrir dans IntelliJ**, puis `mvn test` : tout passe.
+3. **Lancer Valkey** : `docker run -d --rm --name ref-valkey -p 6379:6379 valkey/valkey:8`
+4. **Lancer votre serveur** : ▶ sur `Server.main` (port 6380).
+5. **Comparer** : `java tools/Compare.java tests/s1.txt`
+
+📄 Énoncé : `tp/miniredis/enonce/seance1.md`, sur le même dépôt GitHub.
+
+<!--
+Durée : 25 min
+Passer dans les rangs : c'est ici que Docker bloque. Sans Docker : installer Valkey directement (brew install valkey, apt install valkey, ou dans WSL), voir la présentation du TP.
+Les rapides enchaînent sur le §1 (PING, ECHO) sans attendre.
+-->
+
+---
+
+<!-- _class: lead -->
+<!-- _paginate: false -->
+
+# ☕ Pause — 15 minutes
+
+Reprise : **TP, `PING` et `ECHO`**
+
+<!--
+Durée : 15 min
+Rester disponible pour ceux qui bloquent sur Docker ou sur le projet.
+-->
+
+---
+
+## QCM diagnostique — 10 minutes
+
+- **Non noté.** Il me dit ce qu'on reprend au début de la séance 2.
+- Sur une feuille : votre prénom (facultatif), puis une lettre par question.
+- `1-B  2-D  3-A …`
+- Seul, sans IA, sans le support : c'est **votre** niveau qui m'intéresse.
+
+<!--
+Durée : 10 min
+Le support enseignant insère ici les questions et le corrigé.
+enseignant: prive/qcms/s1-diagnostic-questions.md prive/qcms/s1-diagnostic-corrige.md
+-->
+
+---
+
+## Le rendu de la séance 1
+
+**À rendre : la veille de la séance 2, à 23h59**, sur un dépôt GitHub **privé**.
+
+- Terminez les commandes 🟢 de l'énoncé : `PING` → `DECRBY`.
+- Un test JUnit par commande, et `mvn test` qui passe.
+- Un commit par commande, poussé sur GitHub.
+- Invitez l'enseignant : **`mehdi-elke`**.
+
+En séance 2 : **3 minutes avec moi** pour expliquer et modifier votre code.
+
+📄 Tout est détaillé dans `tp/miniredis/enonce/rendu-seance1.md`.
+
+<!--
+Durée : 5 à 7 min, questions comprises
+Si le temps le permet, faire créer le dépôt GitHub en séance (Git → GitHub → Share Project on GitHub).
 -->

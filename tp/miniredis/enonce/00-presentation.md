@@ -50,6 +50,14 @@ Le projet `starter/` contient :
 
 Vous n'avez pas à écrire le protocole réseau. Lisez quand même `RespTest.java` : il montre les octets réellement échangés.
 
+## Récupérer le projet
+
+1. Ouvrez [github.com/mehdi-elke/java-lecture](https://github.com/mehdi-elke/java-lecture), bouton vert **Code** → **Download ZIP**, puis décompressez l'archive.
+2. Copiez le dossier `tp/miniredis/starter` à l'endroit où vous rangez vos projets, et renommez-le `miniredis`.
+3. Dans IntelliJ : **File → Open**, choisissez le dossier `miniredis`. IntelliJ reconnaît le `pom.xml` et l'ouvre comme projet Maven.
+
+Ce dossier est **votre** projet pour les quatre séances : c'est lui que vous mettrez sur GitHub ([rendu de la séance 1](rendu-seance1.md)).
+
 ## Installation
 
 Il vous faut :
@@ -58,7 +66,7 @@ Il vous faut :
 - **Maven** : `mvn -v`. Les IDE (IntelliJ, VS Code) l'embarquent.
 - **Docker** : pour lancer le Valkey de référence et le client `valkey-cli`.
 
-Sans Docker, demandez à l'enseignant l'adresse du Valkey de référence de la salle, et utilisez `nc` (ou `telnet`) comme client.
+Sans Docker, installez Valkey directement : `brew install valkey` sur macOS, `sudo apt install valkey` sur Linux si votre distribution le propose, ou dans WSL sous Windows. Lancez-le avec `valkey-server` : il écoute sur le port 6379, comme la version Docker. En attendant, vous pouvez avancer sans référence : `nc localhost 6380` pour parler à votre serveur, et vos tests JUnit.
 
 ## Les quatre commandes à connaître
 
