@@ -1,0 +1,41 @@
+# Les séances précédentes doivent toujours fonctionner
+SET k v
+=> OK
+RPUSH l a b
+=> (integer) 2
+LRANGE l 0 -1
+=> ["a", "b"]
+GET l
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+
+# 🟢 KEYS, DBSIZE, MGET avec les streams
+FLUSHALL
+=> OK
+DBSIZE
+=> (integer) 0
+SET user:1 a
+=> OK
+SET user:2 b
+=> OK
+RPUSH user:liste x
+=> (integer) 1
+SET admin x
+=> OK
+DBSIZE
+=> (integer) 4
+KEYS user:*
+=> ["user:1", "user:2", "user:liste"]
+KEYS *
+=> ["admin", "user:1", "user:2", "user:liste"]
+KEYS absent*
+=> []
+MGET user:1 absente user:liste user:2
+=> ["a", (nil), (nil), "b"]
+DBSIZE extra
+=> (error) ERR wrong number of arguments for 'dbsize' command
+
+# 🟢 Persistance : SAVE répond OK (le rechargement se teste en relançant le serveur)
+SAVE
+=> OK
+SAVE extra
+=> (error) ERR wrong number of arguments for 'save' command

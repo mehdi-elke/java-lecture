@@ -1,0 +1,39 @@
+# 🟢 SET NX et XX
+SET verrou a NX
+=> OK
+SET verrou b NX
+=> (nil)
+GET verrou
+=> "a"
+SET verrou c XX
+=> OK
+GET verrou
+=> "c"
+SET autre c XX
+=> (nil)
+GET autre
+=> (nil)
+SET verrou d NX XX
+=> (error) ERR syntax error
+SET verrou e EX 100 NX
+=> (nil)
+SET nouveau e NX EX 100
+=> OK
+TTL nouveau
+=> (integer) 100
+SETNX verrou f
+=> (integer) 0
+SETNX libre f
+=> (integer) 1
+GET libre
+=> "f"
+
+# Les séances précédentes doivent toujours fonctionner
+INCR compteur
+=> (integer) 1
+RPUSH l a
+=> (integer) 1
+LRANGE l 0 -1
+=> ["a"]
+SAVE
+=> OK

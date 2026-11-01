@@ -2,7 +2,7 @@
 
 **Objectif** : à la fin de la séance, `java tools/Compare.java tests/s1.txt` affiche le moins de `✗` possible dans les sections 🟢.
 
-**Vous travaillez dans** : `CommandProcessor.java` et `CommandProcessorTest.java`. Rien d'autre.
+**Vous travaillez dans** : `CommandProcessor.java` et `CommandProcessorTest.java`. Seules exceptions : deux petites classes utilitaires en 🔵 et 🟣 (§5 et §7), dont le nom est imposé.
 
 **Cours utile** : support de la séance 1, §3.2 (`switch` en expression), §3.5 (méthodes `static`), §3.8 (lire une `List` et une `Map`), §4.6 (`Long.parseLong`), §4.7 (UTF-8), §5 (Maven et JUnit).
 
@@ -10,12 +10,13 @@
 
 ## 0. 🟢 Prise en main (25 min)
 
-1. Ouvrez le dossier `starter/` dans votre IDE comme projet Maven.
-2. Lancez `mvn test` : les tests fournis passent.
-3. Lancez le Valkey de référence et votre serveur (voir la [présentation](00-presentation.md)).
-4. Connectez-vous à votre serveur avec `valkey-cli`, tapez `SET nom Ada` puis `GET nom`. Regardez la console de votre serveur : chaque commande reçue s'y affiche.
-5. Tapez `PING`. Votre serveur répond une erreur : `PING` n'existe pas encore.
-6. Lancez `java tools/Compare.java tests/s1.txt` et lisez le résultat.
+1. Ouvrez votre dossier `miniredis` (la copie de `tp/miniredis/starter`, voir la [présentation](00-presentation.md)) dans votre IDE comme projet Maven.
+2. Lancez `mvn test` : les tests fournis passent. Les lignes `WARNING: ... sun.misc.Unsafe ...` affichées par Maven sont normales avec Java 25 : ce ne sont pas des erreurs. Seul `BUILD FAILURE` en est une.
+3. Mettez le projet sous Git tout de suite : dans IntelliJ, **VCS → Enable Version Control Integration → Git**, puis un premier commit « Projet de départ » (⌘K ou Ctrl+K). En terminal : `git init`, `git add .`, `git commit -m "Projet de départ"`. Vous commiterez ensuite après chaque commande.
+4. Lancez le Valkey de référence et votre serveur (voir la [présentation](00-presentation.md)).
+5. Connectez-vous à votre serveur avec `valkey-cli`, tapez `SET nom Ada` puis `GET nom`. Regardez la console de votre serveur : chaque commande reçue s'y affiche.
+6. Tapez `PING`. Votre serveur répond une erreur : `PING` n'existe pas encore.
+7. Lancez `java tools/Compare.java tests/s1.txt` et lisez le résultat.
 
 Lisez ensuite `CommandProcessor.java` en entier. Repérez :
 
@@ -27,7 +28,7 @@ Les données sont dans une `Map<String, String>` : la clé Redis, et sa valeur.
 
 ## Méthode pour chaque commande
 
-1. **Demandez à Valkey** ce qu'il répond, cas normaux et cas d'erreur (`valkey-cli` sur le port 6379).
+1. **Demandez à Valkey** ce qu'il répond, cas normaux et cas d'erreur (`valkey-cli` sur le port 6379). Sans Valkey : la [spécification](specification.md).
 2. **Écrivez le test** dans `CommandProcessorTest`, avec la réponse exacte de Valkey :
    ```java
    @Test
@@ -95,7 +96,18 @@ INCRBY compteur +5     → (error) ERR value is not an integer or out of range
 INCRBY compteur 007    → (error) ERR value is not an integer or out of range
 ```
 
-Écrivez une méthode `static long parseStrict(String text)` qui n'accepte que l'écriture « canonique » d'un entier : pas de `+`, pas de zéro inutile en tête, pas d'espace, pas de `-0`. Les cas sont dans la section 🔵 de `tests/s1.txt`.
+Écrivez cette méthode, dans une nouvelle classe (signature imposée) :
+
+```java
+package miniredis.util;
+
+public final class Integers {
+    /** L'entier écrit dans text, ou une exception s'il n'est pas écrit de façon canonique. */
+    public static long parseStrict(String text) { ... }
+}
+```
+
+Elle n'accepte que l'écriture « canonique » d'un entier : pas de `+`, pas de zéro inutile en tête, pas d'espace, pas de `-0`, rien qui dépasse un `long`. Sinon, elle **lance une `NumberFormatException`**, que vos commandes transforment en `ERR value is not an integer or out of range`. Les cas sont dans la section 🔵 de `tests/s1.txt`.
 
 Pourquoi c'est de la sécurité : deux composants qui ne lisent pas une entrée de la même façon (votre code et un pare-feu applicatif, par exemple) laissent passer ce que l'un des deux aurait dû bloquer. **On valide une entrée selon une règle stricte et explicite, pas selon ce que la bibliothèque tolère.**
 
@@ -119,7 +131,18 @@ Valkey répond 2, pas 1 : Redis compte des **octets**, et `é` occupe 2 octets e
 - `[abc]` : un caractère parmi a, b, c ;
 - `[a-z]` : un caractère de a à z.
 
-Écrivez le filtrage **à la main**, sans expression régulière. Indice : une méthode récursive est la solution la plus courte pour `*`.
+Écrivez le filtrage **à la main**, sans expression régulière, dans cette classe (signature imposée) :
+
+```java
+package miniredis.util;
+
+public final class Glob {
+    /** true si text correspond au motif pattern. */
+    public static boolean matches(String pattern, String text) { ... }
+}
+```
+
+Indice : une méthode récursive est la solution la plus courte pour `*`.
 
 Allez plus loin avec `[^a]` (tout sauf a) et `\*` (une vraie étoile), en comparant avec Valkey.
 

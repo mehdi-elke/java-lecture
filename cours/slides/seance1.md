@@ -1230,7 +1230,7 @@ Transition vers le TP. Le code réseau et le protocole sont fournis : on écrit 
 
 <!--
 Durée : 25 min
-Passer dans les rangs : c'est ici que Docker bloque. Sans Docker : installer Valkey directement (brew install valkey, apt install valkey, ou dans WSL), voir la présentation du TP.
+Passer dans les rangs : c'est ici que Docker bloque. Sans Docker : installer Valkey directement (brew install valkey, apt install valkey, ou dans WSL), voir la présentation du TP. En attendant, Compare bascule seul sur les réponses enregistrées (tests/s1.expected) et enonce/specification.md donne toutes les réponses : personne n'est bloqué.
 Les rapides enchaînent sur le §1 (PING, ECHO) sans attendre.
 -->
 

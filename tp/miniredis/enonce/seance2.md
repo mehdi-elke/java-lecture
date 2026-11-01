@@ -34,6 +34,7 @@ public interface Command {
 package miniredis.command;
 
 public abstract class AbstractCommand implements Command {
+    public static final int VARIADIC = Integer.MAX_VALUE;   // maxArgs sans limite : DEL, MGET, RPUSH…
     protected AbstractCommand(String name, int minArgs, int maxArgs) { ... }
     public final String name() { ... }
     /** Vérifie le nombre d'arguments, puis appelle doExecute. */
@@ -50,6 +51,8 @@ public sealed interface Value permits StringValue, ListValue {
 }
 public record StringValue(String value) implements Value { ... }
 public final class ListValue implements Value {
+    public ListValue();                                 // liste vide
+    public ListValue(Collection<String> items);         // liste qui contient déjà ces éléments, dans l'ordre
     public void pushLeft(String item);
     public void pushRight(String item);
     public Optional<String> popLeft();
@@ -67,16 +70,28 @@ public final class Store {
     public Store();                         // horloge système : Clock.systemUTC()
     public Store(Clock clock);              // horloge choisie : pour les tests
     public Optional<Value> get(String key);
-    public void put(String key, Value value);
-    public boolean remove(String key);      // true si la clé existait
+    public void put(String key, Value value);   // garde l'expiration éventuelle de la clé
+    public boolean remove(String key);      // true si la clé existait ; retire aussi son expiration
     public boolean exists(String key);
-    public List<String> keys();             // copie
-    public int size();
+    public List<String> keys();             // copie, sans les clés expirées
+    public int size();                      // sans les clés expirées
     public void clear();
     public Instant now();
-    public boolean expireAt(String key, Instant when);   // false si la clé n'existe pas
+    public boolean expireAt(String key, Instant when);   // false si la clé n'existe pas ; date passée : supprime la clé
     public boolean persist(String key);                  // true si une expiration a été retirée
     public Optional<Instant> expiration(String key);
+}
+```
+
+Une clé expirée se comporte partout comme une clé absente : `get` vide, `exists` faux, absente de `keys()`.
+
+```java
+package miniredis;
+
+public final class CommandProcessor {
+    public CommandProcessor();              // un Store neuf, horloge système
+    public CommandProcessor(Store store);   // le Store fourni : pour tester l'expiration avec votre horloge
+    public Reply execute(List<String> command);   // inchangée depuis la séance 1
 }
 ```
 
@@ -101,14 +116,16 @@ Question à vous poser : `INCR`, `DECR`, `INCRBY` et `DECRBY` ont-elles besoin d
 
 `ListValue` stocke ses éléments dans un `ArrayDeque<String>` : ajout et retrait en temps constant aux deux bouts (support S2, §6.12).
 
-| Commande | Réponse |
-|---|---|
-| `RPUSH clé a b c` | ajoute à droite, répond la nouvelle longueur. Crée la liste si besoin |
-| `LPUSH clé a b c` | ajoute à gauche. Demandez à Valkey dans quel ordre ! |
-| `LPOP clé`, `RPOP clé` | retire et répond l'élément, `(nil)` si la clé n'existe pas |
-| `LLEN clé` | la longueur, 0 si la clé n'existe pas |
-| `LRANGE clé début fin` | les éléments de début à fin **inclus** |
-| `TYPE clé` | `string`, `list` ou `none` |
+| Commande | Arguments | Réponse |
+|---|---|---|
+| `RPUSH clé a b c` | 2 ou plus | ajoute à droite, répond la nouvelle longueur. Crée la liste si besoin |
+| `LPUSH clé a b c` | 2 ou plus | ajoute à gauche. Demandez à Valkey dans quel ordre ! |
+| `LPOP clé`, `RPOP clé` | 1 | retire et répond l'élément, `(nil)` si la clé n'existe pas |
+| `LLEN clé` | 1 | la longueur, 0 si la clé n'existe pas |
+| `LRANGE clé début fin` | 3 | les éléments de début à fin **inclus** |
+| `TYPE clé` | 1 | `string`, `list` ou `none` |
+
+Valkey accepte aussi `LPOP clé nombre` : ce n'est pas demandé ici, `LPOP` prend exactement 1 argument.
 
 `LRANGE` accepte des index négatifs : `-1` est le dernier élément, `-2` l'avant-dernier. `LRANGE liste 0 -1` renvoie donc toute la liste. Testez sur Valkey les index hors limites (`0 100`, `-100 1`, `5 10`, `3 1`) avant d'écrire `range`.
 
@@ -130,6 +147,20 @@ if (value instanceof StringValue s) { ... s.value() ... }
 
 Pour ne pas répéter ce test dans quinze classes, où le placer ?
 
+Indice : une méthode `protected static` dans `AbstractCommand`, par exemple `Optional<String> getString(Store store, String key)`, qui renvoie la chaîne, ou rien si la clé est absente. Si la clé contient une liste, elle ne peut rien renvoyer de correct : elle **lance une exception**. Créez-la dès maintenant :
+
+```java
+package miniredis;
+
+public class WrongTypeException extends RuntimeException {
+    public WrongTypeException() {
+        super("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
+}
+```
+
+et, dans `CommandProcessor.execute`, transformez-la en réponse : `catch (WrongTypeException e) { return new Reply.Error(e.getMessage()); }`. La séance 3 généralise cette idée à toutes les erreurs.
+
 🔒 **Copie défensive.** `range` et `items` renvoient des **copies**. Si `ListValue` renvoyait son `ArrayDeque` interne, n'importe quel code pourrait modifier la liste sans passer par ses méthodes (support S2, §6.9). Écrivez un test qui le vérifie.
 
 ## 4. 🔵 L'expiration des clés (45 min)
@@ -144,18 +175,42 @@ SET code 1234 EX 60     → OK
 ```
 
 - `EXPIRE clé secondes`, `TTL clé`, `PERSIST clé`, et l'option `SET clé valeur EX secondes`.
-- `TTL` répond -1 sans expiration, -2 si la clé n'existe pas.
+- `TTL` répond -1 sans expiration, -2 si la clé n'existe pas. Sinon, le temps restant **arrondi à la seconde la plus proche** : juste après `EXPIRE session 100`, il reste 99,998 s, et Valkey répond 100. Avec `Duration.getSeconds()`, qui tronque, vous répondriez 99.
+- Arguments : `EXPIRE` 2, `TTL` 1, `PERSIST` 1.
 - Le `Store` garde une deuxième `Map<String, Instant>` : la date d'expiration de chaque clé.
 - Pas de thread qui nettoie en arrière-plan : une clé expirée est supprimée **au moment où on la consulte**. C'est ce que fait Redis.
 - Un `SET` sans `EX` retire l'expiration. Un `APPEND` ou un `RPUSH` la conservent. Vérifiez sur Valkey.
 
-**Tester sans attendre.** Un test qui fait `Thread.sleep(100_000)` est inacceptable. Le `Store` reçoit un `Clock` (support S2, §3.7) : en production, l'horloge système ; dans les tests, une horloge que **vous** faites avancer. Écrivez cette horloge de test : une petite classe qui hérite de `Clock`.
+**Tester sans attendre.** Un test qui fait `Thread.sleep(100_000)` est inacceptable. Le `Store` reçoit un `Clock` (support S2, §3.7) : en production, l'horloge système ; dans les tests, une horloge que **vous** faites avancer. Écrivez cette horloge de test : une petite classe qui hérite de `Clock` (support S2, §3.7, `MutableClock`). Pour tester une commande, donnez au processeur un `Store` qui l'utilise :
+
+```java
+MutableClock clock = new MutableClock(Instant.parse("2026-01-01T00:00:00Z"));
+CommandProcessor processor = new CommandProcessor(new Store(clock));
+processor.execute(List.of("SET", "session", "abc", "EX", "10"));
+clock.advance(Duration.ofSeconds(11));
+assertEquals(Reply.NIL, processor.execute(List.of("GET", "session")));
+```
 
 Testez aussi sur Valkey : `EXPIRE session -1`, `SET k v EX 0`, `SET k v EX abc`, `SET k v FOO`.
 
 ## 5. 🟣 Les ensembles (bonus)
 
-`SADD`, `SMEMBERS`, `SISMEMBER`, `SCARD`, avec une classe `SetValue`.
+`SADD` (2 arguments ou plus), `SMEMBERS`, `SISMEMBER` (2), `SCARD` (1), avec cette classe (signature imposée) :
+
+```java
+package miniredis.store;
+
+public final class SetValue implements Value {
+    public SetValue();                              // ensemble vide
+    public SetValue(Collection<String> members);
+    public boolean add(String member);              // true si le membre est nouveau
+    public boolean contains(String member);
+    public int size();
+    public Set<String> members();                   // copie, ordre libre
+}
+```
+
+`SMEMBERS` répond dans un ordre quelconque : Valkey aussi. `Compare` trie les deux réponses avant de les comparer.
 
 Ajoutez `SetValue` dans le `permits` de `Value`. Si vous avez écrit des `switch` sur `Value`, le compilateur vous montre maintenant chaque endroit à compléter : c'est l'intérêt de `sealed` (support S2, §5.7).
 

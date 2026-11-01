@@ -3,6 +3,14 @@
 //   java tools/Compare.java tests/s1.txt
 //   java tools/Compare.java tests/s1.txt --ref localhost:6379 --ours localhost:6380
 //
+// Sans Valkey (pas de Docker) : si Valkey est injoignable, la comparaison se fait avec les
+// réponses de Valkey enregistrées dans tests/s1.expected. Ce fichier se lit aussi comme une
+// spécification : chaque commande, suivie de « => » et de la réponse exacte de Valkey.
+//   java tools/Compare.java tests/s1.txt --offline   force l'utilisation de s1.expected
+//   java tools/Compare.java tests/s1.txt --record    (re)crée s1.expected depuis Valkey
+// Hors ligne, ce sont les commandes de s1.expected qui sont jouées : une ligne ajoutée à s1.txt
+// ne peut être vérifiée qu'avec Valkey.
+//
 // Format du fichier : une commande par ligne, les mots séparés par des espaces.
 //   "deux mots"   un argument qui contient des espaces (\" \\ \r \n acceptés)
 //   # titre       un commentaire, affiché tel quel
@@ -19,16 +27,47 @@ import java.util.*;
 
 void main(String[] args) throws IOException {
     if (args.length == 0) {
-        IO.println("usage : java tools/Compare.java tests/s1.txt [--ref hôte:port] [--ours hôte:port]");
+        IO.println("usage : java tools/Compare.java tests/s1.txt [--ref hôte:port] [--ours hôte:port] [--offline | --record]");
         System.exit(2);
     }
     String ref = option(args, "--ref", "localhost:6379");
     String ours = option(args, "--ours", "localhost:6380");
     List<String> lines = Files.readAllLines(Path.of(args[0]), StandardCharsets.UTF_8);
+    Path expectedFile = Path.of(args[0].replaceFirst("\\.txt$", "") + ".expected");
 
     Client valkey = new Client(ref);
+    if (List.of(args).contains("--record")) {
+        record(lines, valkey, expectedFile);
+        return;
+    }
     Client mine = new Client(ours);
-    valkey.send(List.of("FLUSHALL"));
+    if (!mine.reachable()) {
+        IO.println("Votre serveur ne répond pas sur " + ours + " : lancez d'abord Server.main (bouton ▶ ou mvn compile exec:java).");
+        System.exit(2);
+    }
+    Iterator<String> recorded = null;
+    if (List.of(args).contains("--offline") || !valkey.reachable()) {
+        if (!Files.exists(expectedFile)) {
+            IO.println("Valkey non utilisé (" + ref + "), et pas de réponses enregistrées (" + expectedFile + ").");
+            IO.println("Un fichier de commandes à vous ne se vérifie qu'avec Valkey. Sans Valkey : tests/s1.txt à s4.txt,");
+            IO.println("ou les réponses de la spécification (enonce/specification.md) dans un test JUnit.");
+            System.exit(2);
+        }
+        List<String> expectedLines = Files.readAllLines(expectedFile, StandardCharsets.UTF_8);
+        IO.println("Valkey non utilisé : comparaison avec les réponses enregistrées dans " + expectedFile);
+        List<String> recordedCommands = expectedLines.stream().filter(l -> !l.startsWith("=> ")).toList();
+        if (!commandsOf(recordedCommands).equals(commandsOf(lines))) {
+            IO.println("⚠ " + args[0] + " ne contient plus les mêmes commandes que " + expectedFile + " :");
+            IO.println("  ce sont les commandes enregistrées qui sont jouées. Vos ajouts demandent Valkey.");
+        }
+        lines = recordedCommands;
+        recorded = expectedLines.stream()
+                .filter(l -> l.startsWith("=> "))
+                .map(l -> l.substring(3))
+                .iterator();
+    } else {
+        valkey.send(List.of("FLUSHALL"));
+    }
     mine.send(List.of("FLUSHALL"));
 
     int same = 0;
@@ -45,7 +84,9 @@ void main(String[] args) throws IOException {
             continue;
         }
         List<String> command = words(trimmed);
-        String expected = normalize(command, valkey.send(command));
+        String expected = recorded != null
+                ? (recorded.hasNext() ? recorded.next() : "(réponse absente de " + expectedFile + ")")
+                : normalize(command, valkey.send(command));
         String actual = normalize(command, mine.send(command));
         if (expected.equals(actual)) {
             same++;
@@ -57,7 +98,38 @@ void main(String[] args) throws IOException {
         }
     }
     IO.println("\n" + same + " identiques, " + different + " différents");
+    if (different > 0) {
+        IO.println("Un ✗ peut en entraîner d'autres plus bas (une clé mal remplie, un serveur arrêté) : corrigez le premier d'abord.");
+    }
     System.exit(different == 0 ? 0 : 1);
+}
+
+/** Les lignes qui sont des commandes (ni vides, ni commentaires), sans les espaces autour. */
+static List<String> commandsOf(List<String> lines) {
+    return lines.stream().map(String::strip).filter(l -> !l.isEmpty() && !l.startsWith("#")).toList();
+}
+
+/** Enregistre les réponses de Valkey : chaque ligne du fichier de test, et sous chaque commande « => réponse ». */
+static void record(List<String> lines, Client valkey, Path expectedFile) throws IOException {
+    if (!valkey.reachable()) {
+        IO.println("Valkey injoignable : rien à enregistrer.");
+        System.exit(2);
+    }
+    valkey.send(List.of("FLUSHALL"));
+    List<String> output = new ArrayList<>();
+    for (String line : lines) {
+        output.add(line);
+        String trimmed = line.strip();
+        if (trimmed.isEmpty() || trimmed.startsWith("#")) continue;
+        if (trimmed.startsWith("!sleep ")) {
+            sleep(Long.parseLong(trimmed.substring(7).strip()));
+            continue;
+        }
+        List<String> command = words(trimmed);
+        output.add("=> " + normalize(command, valkey.send(command)));
+    }
+    Files.write(expectedFile, output, StandardCharsets.UTF_8);
+    IO.println("Réponses enregistrées dans " + expectedFile);
 }
 
 /** Une connexion à un serveur. Se reconnecte si le serveur a fermé la connexion. */
@@ -96,6 +168,15 @@ static final class Client {
         } catch (IOException e) {
             close();
             return "(connexion fermée : " + e.getMessage() + ")";
+        }
+    }
+
+    boolean reachable() {
+        try {
+            if (socket == null || socket.isClosed()) connect();
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 

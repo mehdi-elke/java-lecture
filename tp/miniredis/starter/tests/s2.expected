@@ -1,0 +1,160 @@
+# Les commandes de la séance 1 doivent toujours fonctionner
+SET k v
+=> OK
+GET k
+=> "v"
+INCR n
+=> (integer) 1
+ECHO ok
+=> "ok"
+
+# 🟢 Listes
+RPUSH liste a b c
+=> (integer) 3
+LPUSH liste z y
+=> (integer) 5
+LRANGE liste 0 -1
+=> ["y", "z", "a", "b", "c"]
+LRANGE liste 1 2
+=> ["z", "a"]
+LRANGE liste -2 -1
+=> ["b", "c"]
+LRANGE liste 0 100
+=> ["y", "z", "a", "b", "c"]
+LRANGE liste 5 10
+=> []
+LRANGE liste -100 1
+=> ["y", "z"]
+LRANGE liste 3 1
+=> []
+LRANGE liste 0 x
+=> (error) ERR value is not an integer or out of range
+LRANGE absente 0 -1
+=> []
+LLEN liste
+=> (integer) 5
+LLEN absente
+=> (integer) 0
+LPOP liste
+=> "y"
+RPOP liste
+=> "c"
+LRANGE liste 0 -1
+=> ["z", "a", "b"]
+LPOP absente
+=> (nil)
+RPUSH
+=> (error) ERR wrong number of arguments for 'rpush' command
+RPUSH seule
+=> (error) ERR wrong number of arguments for 'rpush' command
+LLEN
+=> (error) ERR wrong number of arguments for 'llen' command
+
+# 🟢 Une liste vidée disparaît
+RPUSH courte x
+=> (integer) 1
+LPOP courte
+=> "x"
+EXISTS courte
+=> (integer) 0
+TYPE courte
+=> none
+
+# 🟢 TYPE et WRONGTYPE
+TYPE k
+=> string
+TYPE liste
+=> list
+TYPE absente
+=> none
+GET liste
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+INCR liste
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+APPEND liste x
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+STRLEN liste
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+RPUSH k x
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+LLEN k
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+LRANGE k 0 -1
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+MGET k liste
+=> ["v", (nil)]
+SET liste maintenant-une-chaine
+=> OK
+TYPE liste
+=> string
+
+# 🔵 Expiration
+SET session abc
+=> OK
+TTL session
+=> (integer) -1
+TTL absente
+=> (integer) -2
+EXPIRE session 100
+=> (integer) 1
+TTL session
+=> (integer) 100
+PERSIST session
+=> (integer) 1
+TTL session
+=> (integer) -1
+PERSIST session
+=> (integer) 0
+EXPIRE absente 10
+=> (integer) 0
+EXPIRE session abc
+=> (error) ERR value is not an integer or out of range
+SET session2 abc EX 100
+=> OK
+TTL session2
+=> (integer) 100
+SET session2 nouvelle
+=> OK
+TTL session2
+=> (integer) -1
+SET session3 abc EX 0
+=> (error) ERR invalid expire time in 'set' command
+SET session3 abc EX x
+=> (error) ERR value is not an integer or out of range
+SET session3 abc FOO
+=> (error) ERR syntax error
+SET courte abc EX 1
+=> OK
+EXPIRE session -1
+=> (integer) 1
+EXISTS session
+=> (integer) 0
+!sleep 1100
+GET courte
+=> (nil)
+EXISTS courte
+=> (integer) 0
+TTL courte
+=> (integer) -2
+
+# 🟣 Ensembles
+SADD fruits pomme poire pomme
+=> (integer) 2
+SADD fruits kiwi
+=> (integer) 1
+SMEMBERS fruits
+=> ["kiwi", "poire", "pomme"]
+SISMEMBER fruits pomme
+=> (integer) 1
+SISMEMBER fruits banane
+=> (integer) 0
+SCARD fruits
+=> (integer) 3
+SCARD absent
+=> (integer) 0
+TYPE fruits
+=> set
+GET fruits
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value
+SADD k x
+=> (error) WRONGTYPE Operation against a key holding the wrong kind of value

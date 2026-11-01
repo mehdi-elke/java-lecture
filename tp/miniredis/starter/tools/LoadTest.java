@@ -1,7 +1,7 @@
 // Met votre serveur à l'épreuve : plusieurs clients en même temps, et des clients malveillants.
 //
 //   java tools/LoadTest.java incr        50 clients × 2 000 INCR : le compteur doit valoir 100 000
-//   java tools/LoadTest.java lock        50 clients font SET verrou NX en même temps : un seul doit gagner
+//   java tools/LoadTest.java lock        50 clients font SET verrou NX en même temps, 200 fois : un seul doit gagner
 //   java tools/LoadTest.java block       un client connecté mais muet ne doit pas bloquer les autres
 //   java tools/LoadTest.java malformed   12 octets invalides ne doivent pas faire tomber le serveur
 //   java tools/LoadTest.java bomb        une chaîne annoncée de 2 Go doit être refusée tout de suite
@@ -86,30 +86,61 @@ static boolean incr() throws Exception {
     return value.equals("100000") && errors.get() == 0;
 }
 
-/** 50 clients veulent le même verrou au même instant, 20 fois de suite. Un seul doit l'obtenir à chaque fois. */
+/** 50 clients veulent le même verrou au même instant, 200 fois de suite. Un seul doit l'obtenir à chaque fois. */
 static boolean lock() throws Exception {
     int clients = 50;
-    int rounds = 20;
-    boolean ok = true;
-    for (int round = 1; round <= rounds; round++) {
-        try (Connection c = new Connection()) {
-            c.command("DEL", "loadtest:verrou");
+    int rounds = 200;
+    int badRounds = 0;
+    List<Connection> connections = new ArrayList<>();
+    try {
+        // Tous connectés AVANT le top départ : les 50 SET NX arrivent vraiment en même temps
+        for (int i = 0; i < clients; i++) {
+            connections.add(new Connection());
         }
-        AtomicInteger winners = new AtomicInteger();
-        runInParallel(clients, id -> {
-            try (Connection c = new Connection()) {
-                if (c.command("SET", "loadtest:verrou", "client-" + id, "NX").equals("OK")) {
+        try {
+            for (Connection c : connections) {
+                c.command("PING");
+            }
+        } catch (SocketTimeoutException e) {
+            IO.println("le serveur ne répond qu'au premier client : faites d'abord le test block (threads)");
+            return false;
+        }
+        for (int round = 1; round <= rounds; round++) {
+            String reset = connections.getFirst().command("DEL", "loadtest:verrou");
+            if (!reset.startsWith(":")) {
+                IO.println("DEL a répondu " + reset);
+                return false;
+            }
+            AtomicInteger winners = new AtomicInteger();
+            AtomicInteger errors = new AtomicInteger();
+            runInParallel(clients, id -> {
+                String reply = connections.get(id).command("SET", "loadtest:verrou", "client-" + id, "NX");
+                if (reply.equals("OK")) {
                     winners.incrementAndGet();
+                } else if (reply.startsWith("-")) {
+                    errors.incrementAndGet();
+                }
+            });
+            if (errors.get() > 0) {
+                IO.println("SET ... NX répond une erreur : la commande est-elle écrite ? (voir s4.txt)");
+                return false;
+            }
+            if (winners.get() != 1) {
+                badRounds++;
+                if (badRounds <= 5) {
+                    IO.println("tour " + round + " : " + winners.get() + " clients ont obtenu le verrou");
                 }
             }
-        });
-        if (winners.get() != 1) {
-            IO.println("tour " + round + " : " + winners.get() + " clients ont obtenu le verrou");
-            ok = false;
+        }
+    } finally {
+        for (Connection c : connections) {
+            c.close();
         }
     }
-    if (ok) IO.println(rounds + " tours : à chaque fois, un seul gagnant");
-    return ok;
+    IO.println(badRounds == 0
+            ? rounds + " tours : à chaque fois, un seul gagnant"
+            : badRounds + " tour(s) sur " + rounds + " avec plusieurs gagnants");
+    return badRounds == 0;
 }
 
 /** Un client se connecte et ne dit rien. Un autre client doit quand même obtenir sa réponse. */

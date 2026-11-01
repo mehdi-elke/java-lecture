@@ -33,6 +33,8 @@ OK
 
 Votre serveur doit répondre **exactement** la même chose, au caractère près.
 
+Pas de Valkey sous la main, ou besoin d'une vue d'ensemble ? La [spécification écrite](specification.md) liste chaque commande, ses réponses et ses pièges, recopiés de Valkey.
+
 ## Ce qui est fourni
 
 Le projet `starter/` contient :
@@ -47,6 +49,7 @@ Le projet `starter/` contient :
 | `tools/Compare.java` | Compare votre serveur au vrai Valkey |
 | `tools/LoadTest.java` | Met votre serveur à l'épreuve (séance 4) |
 | `tests/s1.txt` … `s4.txt` | Les commandes testées à chaque séance |
+| `tests/s1.expected` … `s4.expected` | Les réponses de Valkey à ces commandes, enregistrées |
 
 Vous n'avez pas à écrire le protocole réseau. Lisez quand même `RespTest.java` : il montre les octets réellement échangés.
 
@@ -66,7 +69,7 @@ Il vous faut :
 - **Maven** : `mvn -v`. Les IDE (IntelliJ, VS Code) l'embarquent.
 - **Docker** : pour lancer le Valkey de référence et le client `valkey-cli`.
 
-Sans Docker, installez Valkey directement : `brew install valkey` sur macOS, `sudo apt install valkey` sur Linux si votre distribution le propose, ou dans WSL sous Windows. Lancez-le avec `valkey-server` : il écoute sur le port 6379, comme la version Docker. En attendant, vous pouvez avancer sans référence : `nc localhost 6380` pour parler à votre serveur, et vos tests JUnit.
+Sans Docker, installez Valkey directement : `brew install valkey` sur macOS, `sudo apt install valkey` sur Linux si votre distribution le propose, ou dans WSL sous Windows. Lancez-le avec `valkey-server` : il écoute sur le port 6379, comme la version Docker. En attendant, vous n'êtes pas bloqués : `Compare` utilise les réponses enregistrées (voir plus bas), et la [spécification](specification.md) donne les réponses attendues.
 
 ## Les quatre commandes à connaître
 
@@ -92,7 +95,7 @@ docker exec -it ref-valkey valkey-cli
 ```
 
 Sous Linux, remplacez `host.docker.internal` par l'adresse IP de votre machine, ou lancez le conteneur avec `--network host`.
-Sans `valkey-cli`, `nc localhost 6380` permet de taper des commandes à la main : `PING` puis Entrée.
+Sans `valkey-cli`, `nc localhost 6380` permet de taper des commandes à la main : `PING` puis Entrée. Les guillemets fonctionnent (`SET "a b" c`), mais les réponses s'affichent brutes (`+OK`, `$3` puis la valeur) et les accents dépendent du terminal : pour vérifier une réponse au caractère près, écrivez un test JUnit.
 
 **4. Comparer votre serveur à Valkey** :
 
@@ -110,7 +113,11 @@ java tools/Compare.java tests/s1.txt
 ```
 
 Chaque ligne `✗` est une tâche. Votre objectif : `0 différents`.
-Pour tester un cas qui n'est pas dans le fichier, écrivez votre propre fichier de commandes : le format est expliqué en tête de `Compare.java`.
+Un `✗` en entraîne parfois d'autres plus bas (une clé mal remplie fausse les commandes suivantes) : corrigez toujours le premier d'abord. Si votre serveur n'est pas lancé, `Compare` le dit et s'arrête.
+
+**Sans Valkey** : si rien n'écoute sur le port 6379, `Compare` le signale et compare votre serveur aux réponses enregistrées dans `tests/s1.expected`. Le résultat est le même. Vous pouvez aussi le forcer avec `--offline`.
+
+**Avec Valkey**, pour tester un cas qui n'est pas dans le fichier, écrivez votre propre fichier de commandes : le format est expliqué en tête de `Compare.java`. Sans Valkey, ce n'est pas possible (aucune réponse enregistrée pour vos commandes, et une ligne ajoutée à `s1.txt` est ignorée) : testez ces cas dans `CommandProcessorTest`, avec les réponses de la [spécification](specification.md).
 
 ## Les niveaux
 

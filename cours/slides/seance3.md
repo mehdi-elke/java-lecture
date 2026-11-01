@@ -1001,6 +1001,59 @@ Lien : Log4Shell (2021), une bibliothèque de logs qui interprétait le contenu 
 
 ---
 
+## 🟢 Fichiers : `Path` désigne, `Files` agit
+
+```java
+Path menu = Path.of("data").resolve("menu.csv");      // data/menu.csv, rien sur le disque
+Files.createDirectories(menu.getParent());
+Files.writeString(menu, "Margherita;12.50\n");          // UTF-8, remplace le fichier
+List<String> lines = Files.exists(menu) ? Files.readAllLines(menu) : List.of();
+```
+
+```java
+try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(menu))) {
+    out.write("Burger;11.90\n".getBytes(StandardCharsets.UTF_8));
+}   // sans close() : le tampon n'est jamais écrit, fichier vide
+```
+
+<div class="support">📖 Support §5.1 à §5.3 — Path, Files, flux d'octets</div>
+
+<!--
+Durée : 3 min
+Démo : MenuStream.java (support §5.3) : 0 octet sans close, 27 avec.
+Message : un Path ne touche pas le disque ; IOException est checked ; un flux se ferme avec try-with-resources.
+Lien TP : SAVE écrit avec le RespWriter fourni, qui prend un OutputStream.
+-->
+
+---
+
+## 🔵 Sauvegarder sans jamais tout perdre
+
+```java
+Path tmp = Files.createTempFile(file.getParent(), "save-", ".tmp");  // même dossier
+try {
+    Files.writeString(tmp, content);
+    Files.move(tmp, file, ATOMIC_MOVE, REPLACE_EXISTING);   // d'un seul coup
+} finally {
+    Files.deleteIfExists(tmp);
+}
+```
+
+- Tué au milieu d'un `writeString` : fichier vide, ancienne sauvegarde perdue
+- Avec le renommage atomique : l'ancienne version **ou** la nouvelle, jamais un mélange
+- 🔒 Nom de fichier venu de l'extérieur : `normalize()` puis `startsWith(dossier)` (CWE-22)
+- Tests : `@TempDir`, un dossier neuf pour chaque test
+
+<div class="support">📖 Support §5.4 à §5.6 — écriture atomique, CWE-22, @TempDir</div>
+
+<!--
+Durée : 3 min
+Question à la salle : que reste-t-il sur le disque si le courant coupe pendant writeString ?
+Lien TP : §4 et §5 de l'énoncé de la séance 3 (SAVE), puis CONFIG SET dbfilename en séance 4.
+-->
+
+---
+
 ## Ce qu'il faut retenir
 
 - **Lambda** : implémentation concise d'une interface à une méthode ; `Integer::sum`, `Order::getTotal`
@@ -1009,6 +1062,7 @@ Lien : Log4Shell (2021), une bibliothèque de logs qui interprétait le contenu 
 - `OrderNotFoundException` (unchecked) si la commande **doit** exister, sinon `Optional`
 - **Jamais** de `catch` vide, de `return 0` ou `null` par défaut, de `printStackTrace`
 - 🔒 Détail dans les logs, message neutre à l'utilisateur ; ni données personnelles ni `\n` bruts
+- Fichiers : `Path` + `Files`, flux fermés par try-with-resources, sauvegarde par renommage atomique
 
 <!--
 Durée : 2 min

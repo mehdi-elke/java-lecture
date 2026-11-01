@@ -34,7 +34,7 @@ Les sections 🔵 et 🟣 sont facultatives. Elles sont regardées en bonus, jam
 - **3 minutes avec l'enseignant**, sur votre propre projet, sans IA : il choisit une de vos commandes, vous **expliquez** comment elle fonctionne, puis vous la **modifiez** selon une nouvelle règle.
 - **Le jalon de fin de séance 2** : votre serveur est comparé à Valkey (`java tools/Compare.java tests/s1.txt`, sections 🟢), plus des commandes de correction qui ne sont pas dans le fichier. Ne codez pas « pour le fichier » : codez comme Valkey.
 
-Pour vous préparer : travaillez dans `CommandProcessor.java` et `CommandProcessorTest.java` seulement, faites au moins un commit par commande avec un message clair (`INCR et DECR`, pas `update`), et **relisez votre code** avant la séance 2.
+Pour vous préparer : travaillez dans `CommandProcessor.java` et `CommandProcessorTest.java` (plus `util/Integers` et `util/Glob` si vous faites le 🔵 et le 🟣), faites au moins un commit par commande avec un message clair (`INCR et DECR`, pas `update`), et **relisez votre code** avant la séance 2.
 
 L'IA est autorisée. Mais vous êtes évalués sans elle : écrivez du code que vous savez expliquer, ligne par ligne.
 
@@ -58,9 +58,9 @@ Ensuite, à chaque tâche terminée :
 En ligne de commande, si vous préférez :
 
 ```text
-git init
+git init                              # inutile si vous l'avez fait au §0 de la séance 1
 git add .
-git commit -m "Projet de départ"
+git commit -m "Projet de départ"      # idem
 git branch -M main
 git remote add origin https://github.com/<votre-compte>/miniredis-<nom>-<prénom>.git
 git push -u origin main

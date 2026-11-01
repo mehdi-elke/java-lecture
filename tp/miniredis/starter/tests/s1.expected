@@ -1,0 +1,165 @@
+# Fournis : SET, GET
+SET nom Ada
+=> OK
+GET nom
+=> "Ada"
+GET absente
+=> (nil)
+SET "nom complet" "Ada Lovelace"
+=> OK
+GET "nom complet"
+=> "Ada Lovelace"
+GET
+=> (error) ERR wrong number of arguments for 'get' command
+SET seul
+=> (error) ERR wrong number of arguments for 'set' command
+FOO bar baz
+=> (error) ERR unknown command 'FOO', with args beginning with: 'bar' 'baz' 
+
+# 🟢 PING et ECHO
+PING
+=> PONG
+PING "bonjour le monde"
+=> "bonjour le monde"
+PING a b
+=> (error) ERR wrong number of arguments for 'ping' command
+ECHO salut
+=> "salut"
+ECHO
+=> (error) ERR wrong number of arguments for 'echo' command
+ECHO a b
+=> (error) ERR wrong number of arguments for 'echo' command
+
+# 🟢 DEL et EXISTS
+SET a 1
+=> OK
+SET b 2
+=> OK
+EXISTS a
+=> (integer) 1
+EXISTS a a absente b
+=> (integer) 3
+EXISTS
+=> (error) ERR wrong number of arguments for 'exists' command
+DEL a absente
+=> (integer) 1
+DEL a
+=> (integer) 0
+DEL
+=> (error) ERR wrong number of arguments for 'del' command
+EXISTS a b
+=> (integer) 1
+
+# 🟢 STRLEN, APPEND, MGET
+SET texte bonjour
+=> OK
+STRLEN texte
+=> (integer) 7
+STRLEN absente
+=> (integer) 0
+APPEND texte " monde"
+=> (integer) 13
+GET texte
+=> "bonjour monde"
+APPEND nouvelle abc
+=> (integer) 3
+GET nouvelle
+=> "abc"
+MGET texte absente nouvelle
+=> ["bonjour monde", (nil), "abc"]
+MGET
+=> (error) ERR wrong number of arguments for 'mget' command
+STRLEN
+=> (error) ERR wrong number of arguments for 'strlen' command
+
+# 🟢 INCR, DECR, INCRBY, DECRBY
+INCR compteur
+=> (integer) 1
+INCR compteur
+=> (integer) 2
+DECR compteur
+=> (integer) 1
+INCRBY compteur 10
+=> (integer) 11
+DECRBY compteur 3
+=> (integer) 8
+GET compteur
+=> "8"
+INCRBY compteur
+=> (error) ERR wrong number of arguments for 'incrby' command
+SET mot abc
+=> OK
+INCR mot
+=> (error) ERR value is not an integer or out of range
+INCRBY compteur abc
+=> (error) ERR value is not an integer or out of range
+SET max 9223372036854775807
+=> OK
+INCR max
+=> (error) ERR increment or decrement would overflow
+SET min -9223372036854775808
+=> OK
+DECR min
+=> (error) ERR increment or decrement would overflow
+INCRBY compteur 9223372036854775807
+=> (error) ERR increment or decrement would overflow
+DECRBY min 1
+=> (error) ERR increment or decrement would overflow
+
+# 🔵 Parsing strict des entiers
+INCRBY compteur +5
+=> (error) ERR value is not an integer or out of range
+INCRBY compteur 007
+=> (error) ERR value is not an integer or out of range
+INCRBY compteur " 5"
+=> (error) ERR value is not an integer or out of range
+INCRBY compteur 5x
+=> (error) ERR value is not an integer or out of range
+INCRBY compteur -3
+=> (integer) 5
+SET zero -0
+=> OK
+INCR zero
+=> (error) ERR value is not an integer or out of range
+INCRBY compteur 99999999999999999999
+=> (error) ERR value is not an integer or out of range
+
+# 🔵 Octets et caractères
+SET accent é
+=> OK
+STRLEN accent
+=> (integer) 2
+APPEND accent té
+=> (integer) 5
+STRLEN accent
+=> (integer) 5
+GET accent
+=> "été"
+
+# 🟣 KEYS
+FLUSHALL
+=> OK
+SET user:1 a
+=> OK
+SET user:2 b
+=> OK
+SET user:10 c
+=> OK
+SET admin x
+=> OK
+KEYS *
+=> ["admin", "user:1", "user:10", "user:2"]
+KEYS user:*
+=> ["user:1", "user:10", "user:2"]
+KEYS user:?
+=> ["user:1", "user:2"]
+KEYS *1*
+=> ["user:1", "user:10"]
+KEYS [au]*
+=> ["admin", "user:1", "user:10", "user:2"]
+KEYS user:[12]
+=> ["user:1", "user:2"]
+KEYS nothing*
+=> []
+KEYS
+=> (error) ERR wrong number of arguments for 'keys' command

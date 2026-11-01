@@ -1736,7 +1736,296 @@ WARNING: Commande introuvable : order-42_INFO: Remboursement de 500 EUR valide p
 
 ---
 
-## 5. Ce qu'il faut retenir
+## 5. Lire et écrire des fichiers
+
+Jusqu'ici, tout disparaît quand le programme s'arrête : les commandes de `DeliveryPlatform` vivent en mémoire. Pour les garder, il faut les écrire sur le disque, puis les relire au démarrage. Java le fait avec deux classes de `java.nio.file` : **`Path`** désigne un fichier, **`Files`** agit dessus.
+
+### 5.1 🟢 `Path` : désigner un fichier
+
+**Le problème.** Un chemin construit en collant des chaînes (`"data" + "/" + name`) se trompe de séparateur sous Windows, oublie un `/`, ou en met deux.
+
+**La solution.** Un `Path` est un chemin, découpé en éléments. Il se construit avec `Path.of(...)` et se prolonge avec `resolve(...)`. Créer un `Path` ne touche **pas** au disque : le fichier peut ne pas exister.
+
+```java
+// Fichier : PathDemo.java
+import java.nio.file.Path;
+
+void main() {
+    Path dir = Path.of("data");
+    Path menu = dir.resolve("menu.csv");              // data/menu.csv
+
+    IO.println(menu);                                 // data/menu.csv
+    IO.println(menu.getFileName());                   // menu.csv
+    IO.println(menu.getParent());                     // data
+    IO.println(menu.isAbsolute());                    // false : relatif au dossier courant
+
+    // normalize() retire les "." et les ".." inutiles
+    Path messy = Path.of("data", "..", "data", ".", "menu.csv");
+    IO.println(messy);                                // data/../data/./menu.csv
+    IO.println(messy.normalize());                    // data/menu.csv
+}
+```
+
+Un chemin **relatif** (`data/menu.csv`) part du dossier courant : celui d'où le programme est lancé. Dans IntelliJ et avec Maven, c'est la racine du projet. `toAbsolutePath()` donne le chemin complet.
+
+### 5.2 🟢 `Files` : lire et écrire du texte
+
+Pour un petit fichier texte, une ligne suffit. Toutes ces méthodes utilisent **UTF-8** par défaut, et lèvent une `IOException` (checked, §3.2) si le disque refuse.
+
+| Méthode | Effet |
+|---|---|
+| `Files.writeString(file, texte)` | crée ou **remplace** le fichier |
+| `Files.readString(file)` | tout le contenu, en une `String` |
+| `Files.readAllLines(file)` | une `List<String>`, une ligne par élément |
+| `Files.lines(file)` | un `Stream<String>` à fermer (§3.4) |
+| `Files.exists(file)` | le fichier existe-t-il ? |
+| `Files.createDirectories(dir)` | crée le dossier et ses parents, sans erreur s'il existe déjà |
+| `Files.deleteIfExists(file)` | supprime, sans erreur s'il n'existe pas |
+
+**Exemple FoodFast** : sauvegarder le menu, puis le relire.
+
+```java
+// Fichier : MenuText.java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.util.List;
+
+void main() throws IOException {
+    Path dir = Files.createTempDirectory("foodfast");      // un dossier jetable pour l'exemple
+    Path menu = dir.resolve("data").resolve("menu.csv");
+
+    Files.createDirectories(menu.getParent());             // sinon : NoSuchFileException
+    Files.writeString(menu, "Margherita;12.50\nCrème brûlée;6.00\n");
+
+    List<String> lines = Files.readAllLines(menu);
+    IO.println(lines.size() + " plats : " + lines);        // 2 plats : [Margherita;12.50, Crème brûlée;6.00]
+
+    // ❌ Lire un fichier absent : une exception, pas une liste vide
+    try {
+        Files.readString(dir.resolve("absent.csv"));
+    } catch (NoSuchFileException e) {
+        IO.println("Introuvable : " + e.getFile().endsWith("absent.csv"));   // Introuvable : true
+    }
+
+    // ✅ Quand l'absence est normale (premier démarrage), on la teste avant
+    Path orders = dir.resolve("orders.csv");
+    List<String> saved = Files.exists(orders) ? Files.readAllLines(orders) : List.of();
+    IO.println(saved.size() + " commande(s) rechargée(s)");     // 0 commande(s) rechargée(s)
+}
+```
+
+### 5.3 🟢 Les flux d'octets : `newOutputStream` et `newInputStream`
+
+`writeString` écrit tout d'un coup. Quand on veut écrire **au fur et à mesure**, ou réutiliser une classe qui écrit dans un `OutputStream` (un `RespWriter`, par exemple), on ouvre un **flux** sur le fichier :
+
+- `Files.newOutputStream(file)` : un `OutputStream`, qui crée ou remplace le fichier ;
+- `Files.newInputStream(file)` : un `InputStream`, pour le relire.
+
+Un flux est une ressource : il se ferme avec **try-with-resources** (§3.4). Et c'est la fermeture qui garantit que tout est bien écrit.
+
+```java
+// Fichier : MenuStream.java
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+static void writeMenu(OutputStream out) throws IOException {
+    for (String dish : new String[] {"Margherita", "Burger", "Tiramisu"}) {
+        out.write((dish + "\n").getBytes(StandardCharsets.UTF_8));   // toujours un charset explicite
+    }
+}
+
+void main() throws IOException {
+    Path dir = Files.createTempDirectory("foodfast");
+
+    // ❌ Flux jamais fermé : les octets restent dans le tampon, le fichier est vide
+    Path lost = dir.resolve("lost.txt");
+    OutputStream forgotten = new BufferedOutputStream(Files.newOutputStream(lost));
+    writeMenu(forgotten);
+    IO.println("Sans close : " + Files.size(lost) + " octets");      // Sans close : 0 octets
+
+    // ✅ try-with-resources : close() vide le tampon, même en cas d'exception
+    Path menu = dir.resolve("menu.txt");
+    try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(menu))) {
+        writeMenu(out);
+    }
+    IO.println("Avec close : " + Files.size(menu) + " octets");      // Avec close : 27 octets
+
+    try (InputStream in = Files.newInputStream(menu)) {
+        String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        IO.println(content.lines().toList());                        // [Margherita, Burger, Tiramisu]
+    }
+}
+```
+
+> 💡 Le `BufferedOutputStream` regroupe les petites écritures en une seule écriture disque : beaucoup plus rapide quand on écrit ligne par ligne. Le prix : rien n'est écrit tant que le tampon n'est pas vidé, par `flush()` ou `close()`.
+
+### 5.4 🔵 Écrire de façon atomique
+
+**Le problème.** `Files.writeString(menu, ...)` commence par **vider** le fichier, puis écrit. Si le programme est tué entre les deux (coupure de courant, `kill`, disque plein), il reste un fichier vide ou à moitié écrit. L'ancienne sauvegarde est perdue, et la nouvelle est illisible.
+
+**La solution.** Écrire dans un fichier **temporaire**, puis le **renommer** sur le fichier final. Avec l'option `ATOMIC_MOVE`, le renommage se fait d'un seul coup : à tout instant, le fichier final est soit l'ancienne version complète, soit la nouvelle, jamais un mélange.
+
+```java
+// Fichier : AtomicSave.java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+
+/** Remplace le contenu de file sans jamais laisser un fichier à moitié écrit. */
+static void saveAtomically(Path file, String content) throws IOException {
+    // Le temporaire est créé dans le MÊME dossier : un renommage atomique ne traverse pas les disques
+    Path tmp = Files.createTempFile(file.getParent(), "save-", ".tmp");
+    try {
+        Files.writeString(tmp, content);
+        Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+    } finally {
+        Files.deleteIfExists(tmp);   // si l'écriture a échoué, on ne laisse pas de déchet
+    }
+}
+
+void main() throws IOException {
+    Path menu = Files.createTempDirectory("foodfast").resolve("menu.csv");
+    saveAtomically(menu, "Margherita;12.50\n");
+    saveAtomically(menu, "Margherita;12.50\nBurger;11.90\n");
+    IO.println(Files.readAllLines(menu));                  // [Margherita;12.50, Burger;11.90]
+    try (var files = Files.list(menu.getParent())) {
+        IO.println(files.count() + " fichier dans le dossier");   // 1 fichier dans le dossier
+    }
+}
+```
+
+Après un renommage réussi, `tmp` n'existe plus : le `deleteIfExists` du `finally` ne fait alors rien. Les bases de données et Redis lui-même sauvegardent ainsi.
+
+### 5.5 🔒 Un nom de fichier choisi par l'utilisateur (CWE-22)
+
+**Le problème.** FoodFast permet de télécharger une facture par son nom : `invoices.resolve(name)`. Un attaquant envoie `../../etc/passwd`. `resolve` ne vérifie rien : le chemin **sort** du dossier des factures et désigne n'importe quel fichier du serveur. C'est la **traversée de répertoire** ([CWE-22](https://cwe.mitre.org/data/definitions/22.html)), l'une des failles web les plus courantes. En écriture, c'est pire : l'attaquant choisit où écrire.
+
+**La solution.** Normaliser le chemin obtenu, puis vérifier qu'il est **toujours dans** le dossier autorisé.
+
+```java
+// Fichier : SafeInvoice.java
+import java.nio.file.Path;
+
+/** Le fichier name, à condition qu'il soit dans dir. Sinon : IllegalArgumentException. */
+static Path resolveInside(Path dir, String name) {
+    Path base = dir.toAbsolutePath().normalize();
+    Path target = base.resolve(name).normalize();
+    if (!target.startsWith(base) || target.equals(base)) {
+        throw new IllegalArgumentException("chemin refusé : " + name);
+    }
+    return target;
+}
+
+void main() {
+    Path invoices = Path.of("invoices");
+    for (String name : new String[] {"2026-0042.pdf", "../../etc/passwd", "/etc/passwd", "."}) {
+        try {
+            IO.println("✅ " + resolveInside(invoices, name).getFileName());
+        } catch (IllegalArgumentException e) {
+            IO.println("❌ " + e.getMessage());
+        }
+    }
+}
+```
+
+Sortie :
+
+```text
+✅ 2026-0042.pdf
+❌ chemin refusé : ../../etc/passwd
+❌ chemin refusé : /etc/passwd
+❌ chemin refusé : .
+```
+
+Trois détails comptent :
+- **`normalize()` avant la vérification** : sinon `invoices/../../etc/passwd` « commence » bien par `invoices`.
+- **`Path.startsWith` compare des éléments**, pas des caractères : `invoices2/x.pdf` ne commence pas par `invoices`. Avec `String.startsWith`, il passerait.
+- Un nom **absolu** (`/etc/passwd`) remplace complètement la base dans `resolve` : la vérification l'attrape aussi.
+
+> 🔒 **Encore mieux** : quand c'est possible, ne pas accepter de chemin du tout. Une liste blanche (« un nom de fichier simple : lettres, chiffres, `-`, `.` ») ou un identifiant traduit côté serveur ferment la porte avant même de construire le chemin.
+
+### 5.6 🟢 Tester avec `@TempDir`
+
+Un test qui écrit dans `data/` laisse des fichiers derrière lui, et échoue si un autre test a écrit au même endroit. JUnit fournit un dossier **neuf et vide pour chaque test**, supprimé ensuite : un paramètre (ou un attribut) annoté `@TempDir`.
+
+La classe testée : un petit stockage du menu, qui rend une liste vide au premier démarrage.
+
+```java
+// Fichier : MenuFile.java (compilation seule)
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+class MenuFile {
+    private final Path file;
+
+    MenuFile(Path file) {
+        this.file = file;
+    }
+
+    void save(List<String> dishes) throws IOException {
+        Files.createDirectories(file.getParent());
+        Files.write(file, dishes);                 // une ligne par plat, en UTF-8
+    }
+
+    /** Le menu enregistré, ou une liste vide s'il n'y a encore rien. */
+    List<String> load() throws IOException {
+        return Files.exists(file) ? Files.readAllLines(file) : List.of();
+    }
+}
+```
+
+```java
+// Fichier : MenuFileTest.java (avec MenuFile.java)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+class MenuFileTest {
+
+    @TempDir
+    Path dir;   // un dossier vide, créé avant chaque test et supprimé après
+
+    @Test
+    void le_menu_relu_est_celui_qui_a_ete_sauvegarde() throws IOException {
+        MenuFile menu = new MenuFile(dir.resolve("data/menu.txt"));
+        menu.save(List.of("Margherita", "Crème brûlée"));
+        assertEquals(List.of("Margherita", "Crème brûlée"), menu.load());
+    }
+
+    @Test
+    void au_premier_demarrage_le_menu_est_vide() throws IOException {
+        assertEquals(List.of(), new MenuFile(dir.resolve("menu.txt")).load());
+    }
+
+    @Test
+    void un_nouveau_save_remplace_l_ancien() throws IOException {
+        MenuFile menu = new MenuFile(dir.resolve("menu.txt"));
+        menu.save(List.of("Margherita", "Burger"));
+        menu.save(List.of("Tiramisu"));
+        assertEquals(List.of("Tiramisu"), menu.load());
+    }
+}
+```
+
+Chaque test reçoit son propre dossier : ils peuvent s'exécuter dans n'importe quel ordre sans se gêner. C'est exactement ce qu'il faut pour tester la sauvegarde du TP.
+
+---
+
+## 6. Ce qu'il faut retenir
 
 **Lambdas**
 - Une **interface fonctionnelle** a une seule méthode abstraite (`Discount`, `Predicate`, `Function`, `Comparator`…). Une **lambda** en est une implémentation concise : `t -> t.subtract(...)`.
@@ -1757,6 +2046,13 @@ WARNING: Commande introuvable : order-42_INFO: Remboursement de 500 EUR valide p
 - `IllegalArgumentException` : mauvais paramètre. `IllegalStateException` : mauvais moment (transition interdite).
 - **Jamais** de `catch` vide, de `return 0` ou `return null` « par défaut », de `printStackTrace`.
 
+**Fichiers**
+- `Path.of(...)` et `resolve(...)` désignent un fichier ; `Files` lit et écrit (UTF-8 par défaut, `IOException` checked).
+- Un flux (`newOutputStream`, `newInputStream`) se ferme avec try-with-resources : c'est `close()` qui garantit l'écriture.
+- Sauvegarde sûre : fichier temporaire dans le même dossier, puis `Files.move(..., ATOMIC_MOVE, REPLACE_EXISTING)`.
+- 🔒 Nom de fichier venu de l'extérieur : `normalize()`, puis `startsWith(dossier)` (CWE-22).
+- Tests : `@TempDir`, un dossier neuf par test.
+
 **Journalisation et sécurité**
 - `System.getLogger(...)`, un niveau, et l'exception en dernier argument.
 - 🔒 Détail technique dans les logs, message neutre + référence pour l'utilisateur (CWE-209).
@@ -1765,9 +2061,9 @@ WARNING: Commande introuvable : order-42_INFO: Remboursement de 500 EUR valide p
 
 ---
 
-## 6. Pour aller plus loin
+## 7. Pour aller plus loin
 
-- **dev.java** : [Lambda Expressions](https://dev.java/learn/lambdas/), [The Stream API](https://dev.java/learn/api/streams/), [Exceptions](https://dev.java/learn/exceptions/).
+- **dev.java** : [Lambda Expressions](https://dev.java/learn/lambdas/), [The Stream API](https://dev.java/learn/api/streams/), [Exceptions](https://dev.java/learn/exceptions/), [Java I/O](https://dev.java/learn/java-io/).
 - **Documentation Java 25** : [`java.util.stream`](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/package-summary.html), [`Collectors`](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Collectors.html), [`System.Logger`](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/System.Logger.html).
 - **JEP** : [JEP 485 — Stream Gatherers](https://openjdk.org/jeps/485), [JEP 456 — Unnamed Variables & Patterns](https://openjdk.org/jeps/456), [JEP 458 — Launch Multi-File Source-Code Programs](https://openjdk.org/jeps/458).
 - **OWASP** : [Error Handling Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html), [Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html).
