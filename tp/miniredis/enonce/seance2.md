@@ -99,7 +99,7 @@ public final class CommandProcessor {
 
 Avancez par petites étapes, `mvn test` à chaque fois :
 
-1. Créez `Store` avec une `Map<String, Value>` et `StringValue`. Faites-le utiliser par `CommandProcessor` à la place de la `Map<String, String>`.
+1. Créez `Store` avec une `Map<String, Value>` et `StringValue`. Faites-le utiliser par `CommandProcessor` à la place de la `Map<String, String>`. `ListValue` n'existe pas encore : écrivez pour l'instant `sealed interface Value permits StringValue`, et vous ajouterez `ListValue` au `permits` au §2.
 2. Créez `Command` et `AbstractCommand`. La vérification du nombre d'arguments est écrite **une seule fois**, dans `execute`, qui est `final` : une sous-classe ne peut pas l'oublier ni la contourner. C'est le patron de méthode (support S2, §4.8).
 3. Transformez `GET` en une classe `GetCommand extends AbstractCommand`. Dans `CommandProcessor`, remplacez son `case` par un registre :
    ```java

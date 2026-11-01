@@ -4,20 +4,42 @@ RPUSH l a b
 LRANGE l 0 -1
 GET l
 
-# 🟢 KEYS, DBSIZE, MGET avec les streams
+# 🟢 KEYS et MGET avec les streams
 FLUSHALL
-DBSIZE
 SET user:1 a
 SET user:2 b
 RPUSH user:liste x
 SET admin x
-DBSIZE
 KEYS user:*
 KEYS *
 KEYS absent*
 MGET user:1 absente user:liste user:2
-DBSIZE extra
+
+# 🟢 SET NX et XX
+SET verrou a NX
+SET verrou b NX
+GET verrou
+SET verrou c XX
+GET verrou
+SET autre c XX
+GET autre
+SET verrou d NX XX
+SET verrou e EX 100 NX
+SET nouveau e NX EX 100
+TTL nouveau
+SETNX verrou f
+SETNX libre f
+GET libre
+SETNX verrou
 
 # 🟢 Persistance : SAVE répond OK (le rechargement se teste en relançant le serveur)
 SAVE
 SAVE extra
+
+# 🔵 DBSIZE
+FLUSHALL
+DBSIZE
+SET user:1 a
+RPUSH user:liste x
+DBSIZE
+DBSIZE extra

@@ -47,6 +47,7 @@ Le projet `starter/` contient :
 | `server/Server.java` | La boucle réseau : accepte un client et lui répond |
 | `CommandProcessor.java` | **Votre point de départ** : exécute les commandes. `SET` et `GET` sont donnés en exemple |
 | `tools/Compare.java` | Compare votre serveur au vrai Valkey |
+| `tools/Cli.java` | Un mini `valkey-cli`, pour parler à votre serveur sans rien installer |
 | `tools/LoadTest.java` | Met votre serveur à l'épreuve (séance 4) |
 | `tests/s1.txt` … `s4.txt` | Les commandes testées à chaque séance |
 | `tests/s1.expected` … `s4.expected` | Les réponses de Valkey à ces commandes, enregistrées |
@@ -95,7 +96,17 @@ docker exec -it ref-valkey valkey-cli
 ```
 
 Sous Linux, remplacez `host.docker.internal` par l'adresse IP de votre machine, ou lancez le conteneur avec `--network host`.
-Sans `valkey-cli`, `nc localhost 6380` permet de taper des commandes à la main : `PING` puis Entrée. Les guillemets fonctionnent (`SET "a b" c`), mais les réponses s'affichent brutes (`+OK`, `$3` puis la valeur) et les accents dépendent du terminal : pour vérifier une réponse au caractère près, écrivez un test JUnit.
+Sans `valkey-cli`, utilisez le client fourni, qui s'utilise de la même façon :
+
+```bash
+java tools/Cli.java                              # votre serveur (localhost:6380), Ctrl+D pour quitter
+java tools/Cli.java --server localhost:6379      # le Valkey de référence
+java tools/Cli.java SET plat "pâtes fraîches"    # une seule commande
+```
+
+Les guillemets, `\"` et `\r\n` à l'intérieur des guillemets, et les accents sont envoyés correctement. Seule différence d'affichage : `valkey-cli` écrit les accents en octets (`"p\xc3\xa2tes"`), `Cli` les écrit lisiblement.
+
+`nc localhost 6380` sert seulement à envoyer des octets bruts (séance 3) : il ne comprend pas les guillemets, et les réponses s'affichent brutes (`+OK`, `$3` puis la valeur).
 
 **4. Comparer votre serveur à Valkey** :
 

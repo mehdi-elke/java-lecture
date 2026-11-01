@@ -45,21 +45,7 @@ Avant, le `try (Socket client = ...)` de la boucle fermait la socket. Maintenant
 
 Relancez `LoadTest block` : il passe.
 
-## 2. 🟢 `SET` conditionnel : `NX`, `XX`, `SETNX` (30 min)
-
-Un **verrou** distribué, c'est une clé : le premier client qui la crée a le verrou. Il faut donc un `SET` qui n'écrit **que si la clé n'existe pas**.
-
-| Commande | Effet | Réponse |
-|---|---|---|
-| `SET clé valeur NX` | écrit seulement si la clé **n'existe pas** | `OK`, ou `(nil)` sans rien modifier |
-| `SET clé valeur XX` | écrit seulement si la clé **existe** | `OK`, ou `(nil)` sans rien modifier |
-| `SETNX clé valeur` | comme `SET … NX` (2 arguments) | `(integer) 1` si écrit, `0` sinon |
-
-Les options de `SET` se combinent dans n'importe quel ordre avec `EX` (séance 2) : `SET k v NX EX 10` et `SET k v EX 10 NX` sont identiques. `NX` et `XX` ensemble : `ERR syntax error`. Tous les cas, avec les réponses de Valkey, sont dans la section « Séance 4 » de la [spécification](specification.md) et dans `tests/s4.txt`.
-
-Écrivez d'abord les tests, puis la commande. `Compare` sur `s4.txt` doit passer.
-
-## 3. 🟢 🔒 La race condition (45 min)
+## 2. 🟢 🔒 La race condition (40 min)
 
 Maintenant que plusieurs clients s'exécutent **en même temps**, ils touchent tous le même `Store`. Lancez :
 
@@ -73,7 +59,7 @@ java tools/LoadTest.java incr
 java tools/LoadTest.java lock
 ```
 
-Pire : 50 clients font en même temps `SET verrou x NX` (votre commande du §2), 200 fois de suite, et à certains tours **plusieurs** reçoivent `OK`. Or `NX` veut dire « seulement si la clé n'existe pas ». Deux clients croient tous les deux détenir le verrou. C'est un **TOCTOU** : *time of check to time of use* (support S4, §1.8). Sur un vrai système, deux processus croient chacun être seuls à traiter un paiement.
+Pire : 50 clients font en même temps `SET verrou x NX` (votre commande de la séance 3), 200 fois de suite, et à certains tours **plusieurs** reçoivent `OK`. Or `NX` veut dire « seulement si la clé n'existe pas ». Deux clients croient tous les deux détenir le verrou. C'est un **TOCTOU** : *time of check to time of use* (support S4, §1.8). Sur un vrai système, deux processus croient chacun être seuls à traiter un paiement.
 
 **La correction.** Le vrai Redis exécute toutes les commandes sur **un seul thread** : elles ne se chevauchent jamais. Faites pareil, le plus simplement du monde : rendez `CommandProcessor.execute` `synchronized`. Une commande entière s'exécute d'un bloc.
 
@@ -81,7 +67,7 @@ Relancez `incr` et `lock` : exactement 100 000, et un seul `OK` à chaque tour.
 
 🔵 Alternative plus fine, sans verrou global : `ConcurrentHashMap` et ses opérations atomiques `compute` / `putIfAbsent` (support S4, §1.7). Plus rapide, mais il faut raisonner commande par commande.
 
-## 4. 🟢 🔒 Déni de service : la longueur annoncée (30 min)
+## 3. 🟢 🔒 Déni de service : la longueur annoncée (30 min)
 
 Souvenez-vous de la séance 3 : on ne fait pas confiance à une longueur envoyée par le client. Testez l'autre bout du problème :
 
@@ -89,7 +75,7 @@ Souvenez-vous de la séance 3 : on ne fait pas confiance à une longueur envoyé
 java tools/LoadTest.java bomb
 ```
 
-Le client annonce une chaîne de **2 Go** en 30 octets : `*1\r\n$2000000000\r\n`. Si votre `RespReader` fait `new byte[2_000_000_000]`, le serveur réserve 2 Go d'un coup. Quelques clients comme celui-là, et le serveur tombe (`OutOfMemoryError`). C'est un déni de service.
+Le client annonce une chaîne de **2 Go** en 30 octets : `*1\r\n$2000000000\r\n`. Si votre `RespReader` fait `new byte[2_000_000_000]`, le serveur tente de réserver 2 Go d'un coup. Selon la mémoire de la JVM, il lève une `OutOfMemoryError`, ou réussit et attend 2 Go qui n'arriveront jamais. Quelques clients comme celui-là, et le serveur n'a plus de mémoire pour personne. C'est un déni de service.
 
 Bornez, dans `RespReader` :
 
@@ -109,7 +95,9 @@ Au-delà, une `ProtocolException` (comme en séance 3). Ces limites sont les nô
 
 Relancez `bomb` : le serveur refuse tout de suite et reste debout.
 
-## 5. 🟢 🔒 Persistance en base, et injection SQL (1 h 15)
+Attention à votre sauvegarde : `FileSnapshotStore.load()` relit le fichier avec ce même `RespReader`. Une liste de plus de 1 024 éléments, ou une valeur de plus de 512 Ko, ne se rechargerait plus. 🔵 Le fichier vient de votre serveur, pas d'un client : ajoutez un second constructeur `RespReader(InputStream in, int maxBulk, int maxArgs)`, et passez des limites larges dans `load()`.
+
+## 4. 🟢 🔒 Persistance en base, et injection SQL (50 min)
 
 On remplace le fichier par une base **H2**. L'enseignant vous donne `H2SnapshotStore.java` **en début de séance** : placez-le dans `src/main/java/miniredis/persistence/`. Il n'utilise que les signatures imposées (`Snapshot`, `Value`, `StringValue`, `ListValue`, `SnapshotStore`) : il compile tel quel dans votre projet. La dépendance H2 est déjà dans le `pom.xml`.
 
@@ -156,21 +144,25 @@ Si une apostrophe casse une requête par accident, un attaquant peut la casser *
 1. regardez dans le code exactement comment la valeur est insérée dans la requête `INSERT` ;
 2. construisez une valeur qui ferme proprement cet `INSERT`, puis en ajoute un second, destructeur ;
 3. envoyez-la avec `SET`, puis `SAVE` ;
-4. vérifiez les dégâts : un nouveau `SAVE` échoue, parce que la table n'existe plus.
+4. vérifiez les dégâts : le `SAVE` suivant échoue (`Table "ENTRIES" not found` dans les logs), parce que la table n'existe plus.
+
+Pour envoyer une valeur pleine d'apostrophes et de guillemets, utilisez `valkey-cli` ou `java tools/Cli.java` : entre guillemets, `\"` est un guillemet dans la valeur.
 
 ### c) La correction
 
 - Réécrivez `save()` avec des `PreparedStatement` et des `?` (support S4, §2.5). La valeur n'est **jamais** mélangée au texte SQL : une apostrophe, un `DROP TABLE`, tout redevient une donnée inoffensive.
-- Écrivez `load()` avec un `ResultSet` (support S4, §2.6) : le `TODO` est à vous.
-- Vérifiez : `SET plat "l'été"`, `SAVE`, redémarrage, `GET plat` répond `"l'été"`. Et votre valeur d'attaque, maintenant, est juste stockée telle quelle.
+- Vérifiez : `SET plat "l'été"`, `SAVE` répond `OK`. Et votre valeur d'attaque, maintenant, est juste stockée telle quelle.
+- 🔵 Écrivez `load()` avec un `ResultSet` (support S4, §2.6) : le `TODO` est à vous. Vérifiez : redémarrage, `GET plat` répond `"l'été"`.
 
-🔵 🔒 **Les identifiants.** Le code fourni contient `"sa"` et un mot de passe en clair. Un secret dans le code source finit dans Git, donc partout (support S4, §2.3). Lisez l'URL, l'utilisateur et le mot de passe depuis des **variables d'environnement** (`System.getenv`), avec une valeur par défaut raisonnable.
+🔵 🔒 **Les identifiants.** Le code fourni contient `"sa"` et un mot de passe en clair. Un secret dans le code source finit dans Git, donc partout (support S4, §2.3). Lisez l'URL, l'utilisateur et le mot de passe depuis les **variables d'environnement** `MINIREDIS_JDBC_URL`, `MINIREDIS_DB_USER` et `MINIREDIS_DB_PASSWORD` (`System.getenv`). Sans variable : l'URL actuelle, l'utilisateur `sa`, et un mot de passe **vide** (jamais un vrai secret par défaut dans le code).
 
-## 6. 🟣 🔒 Les bonus sécurité
+Attention : H2 enregistre l'utilisateur et le mot de passe **dans le fichier de la base**, à sa création. Si vous changez de mot de passe, la base existante le refuse (`Wrong user name or password`) : supprimez `data/miniredis.mv.db`, elle sera recréée.
+
+## 5. 🟣 🔒 Les bonus sécurité
 
 - **`AUTH`.** Si la variable d'environnement `MINIREDIS_PASSWORD` est définie, le serveur exige `AUTH motdepasse` avant toute autre commande, et répond `NOAUTH Authentication required.` sinon. Comparez le mot de passe avec `MessageDigest.isEqual`, **pas** avec `equals` : une comparaison qui s'arrête au premier caractère faux laisse deviner le mot de passe en mesurant le temps de réponse (support S4, §3.1).
 
-  Être authentifié est un état **de la connexion**, pas du serveur : un client authentifié ne doit pas ouvrir la porte aux autres. Il ne peut donc pas vivre dans `CommandProcessor`, partagé par tous et dont `execute` ne change pas. Gérez `AUTH` dans `Server`, dans la boucle de **chaque** client : une variable locale `authenticated`, et `AUTH` traitée avant d'appeler `processor.execute`. Les réponses de Valkey sont dans la [spécification](specification.md).
+  Être authentifié est un état **de la connexion**, pas du serveur : un client authentifié ne doit pas ouvrir la porte aux autres. Il ne peut donc pas vivre dans `CommandProcessor`, partagé par tous et dont `execute` ne change pas. Gérez `AUTH` dans `Server`, dans la boucle de **chaque** client : une variable locale `authenticated`, et `AUTH` traitée avant d'appeler `processor.execute`. La vérification du mot de passe, elle, mérite sa propre petite classe (par exemple `Authentication`), testable sans socket. Les réponses de Valkey sont dans la [spécification](specification.md).
 - **`CONFIG SET dir`.** C'est l'attaque historique des Redis exposés : l'attaquant change le dossier de sauvegarde, puis écrit un fichier où il veut (une clé SSH, une tâche cron). Implémentez `CONFIG GET dir` et `CONFIG GET dbfilename`, mais **refusez** `CONFIG SET dir` à l'exécution. Pour `CONFIG SET dbfilename`, n'acceptez qu'un nom de fichier simple, jamais un chemin (pas de `/`, pas de `..` : support S3, §5.5). Formats et messages : dans la spécification.
 
 ---
@@ -180,6 +172,6 @@ Si une apostrophe casse une requête par accident, un attaquant peut la casser *
 - [ ] `java tools/LoadTest.java all` : tout passe.
 - [ ] `mvn test` passe.
 - [ ] `Compare` sur `s1` à `s4` : sections 🟢 toutes `✓`.
-- [ ] L'injection SQL est corrigée, la base recharge après redémarrage.
+- [ ] L'injection SQL est corrigée (et 🔵 la base recharge après redémarrage).
 - [ ] Vous savez expliquer une de vos corrections de sécurité à l'oral.
 - [ ] Tout est commité et poussé.

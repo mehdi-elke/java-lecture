@@ -37,6 +37,11 @@ class RespTest {
     }
 
     @Test
+    void inlineCommandsAreDecodedAsUtf8() throws IOException {
+        assertEquals(List.of("SET", "été", "chaud"), read("SET été chaud\r\n"));
+    }
+
+    @Test
     void returnsNullAtEndOfStream() throws IOException {
         assertNull(read(""));
     }

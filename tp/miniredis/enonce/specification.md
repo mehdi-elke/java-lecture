@@ -138,6 +138,17 @@ KEYS user:[12]    => ["user:1", "user:2"]
 KEYS nothing*     => []
 ```
 
+Plus loin (🟣) : `[^a]` = un caractère **sauf** ceux-là, `[a-z]` = un intervalle, `\*` = le caractère `*` lui-même. Les cas limites de Valkey :
+
+```text
+(clés : user:a, user:b, user:z, user:*)
+KEYS user:[^a]    => ["user:*", "user:b", "user:z"]
+KEYS user:\*      => ["user:*"]
+KEYS user:[a-z]   => ["user:a", "user:b", "user:z"]
+KEYS user:[z-a]   => ["user:a", "user:b", "user:z"]   intervalle à l'envers : accepté
+KEYS user:[ab     => ["user:a", "user:b"]            crochet jamais fermé : la fin du motif sert de fin
+```
+
 ---
 
 ## Séance 2 — Listes, types, expiration, ensembles
@@ -196,7 +207,26 @@ SET session3 abc EX x        => (error) ERR value is not an integer or out of ra
 SET session3 abc FOO         => (error) ERR syntax error
 EXPIRE session -1            => (integer) 1   une durée négative supprime la clé
 EXISTS session               => (integer) 0
+SET s abc EX -5              => (error) ERR invalid expire time in 'set' command
+SET s abc EX                 => (error) ERR syntax error
+SET s abc ex 10              => OK            les options aussi sont insensibles à la casse
+SET s abc EX 10 EX 20        => OK            option répétée : la dernière gagne (TTL 20)
+EXPIRE absente 10            => (integer) 0
+EXPIRE s abc                 => (error) ERR value is not an integer or out of range
 ```
+
+🟣 **Durées immenses** : Valkey convertit la durée en millisecondes et l'ajoute à l'heure actuelle. Si le résultat ne tient pas dans un `long`, il refuse (et la clé ne change pas) :
+
+```text
+EXPIRE s 9223372036854775    => (error) ERR invalid expire time in 'expire' command
+EXPIRE s -9223372036854775808 => (error) ERR invalid expire time in 'expire' command
+SET s abc EX 9223372036854775807 => (error) ERR invalid expire time in 'set' command
+EXPIRE s 9223372036854       => (integer) 1   (≈ 292 000 ans : accepté)
+```
+
+Sans cette vérification, `Instant.plus` lève une exception et votre serveur répond `ERR internal error` (séance 3) : c'est moins précis, mais il reste debout.
+
+**L'instant exact de l'échéance** : Valkey considère une clé comme expirée quand l'heure actuelle **dépasse** son échéance. Expirer pile à l'échéance (`!when.isAfter(now)`) est accepté aussi : les tests ne vérifient jamais cet instant précis, à la milliseconde près.
 
 Une clé expirée se comporte **exactement** comme une clé absente : `GET` → `(nil)`, `EXISTS` → `0`, `TTL` → `-2`, et elle n'apparaît ni dans `KEYS` ni dans `DBSIZE`.
 
@@ -208,10 +238,11 @@ Une clé expirée se comporte **exactement** comme une clé absente : `GET` → 
 
 | Commande | Effet | Réponse |
 |---|---|---|
-| `DBSIZE` | nombre de clés (sans argument) | `(integer) n` |
 | `KEYS motif` | voir séance 1 ; doit aussi trouver les listes | un tableau |
+| `SET … NX` / `XX`, `SETNX` | `SET` conditionnel : voir plus bas | |
 | `SAVE` | écrit les données sur le disque (sans argument) | `OK` |
-| `INFO` | des informations sur le serveur (arguments ignorés) | un texte (`Bulk`) |
+| 🔵 `DBSIZE` | nombre de clés (sans argument) | `(integer) n` |
+| 🔵 `INFO` | des informations sur le serveur (arguments ignorés) | un texte (`Bulk`) |
 
 `MGET` sur un mélange de chaînes, de listes et de clés absentes : `(nil)` pour tout ce qui n'est pas une chaîne.
 
@@ -224,31 +255,7 @@ Le rechargement des données se vérifie en arrêtant puis en relançant votre s
 
 `DBSIZE x` et `SAVE x` : `ERR wrong number of arguments for 'dbsize' command` (resp. `'save'`).
 
-**`INFO`** : le format est imposé par l'énoncé de la séance 3 (§3), car Valkey en affiche des centaines de lignes. Seule la ligne `# Keyspace` est identique à Valkey :
-
-```text
-DBSIZE                     => (integer) 1
-INFO keyspace              => (extrait) db0:keys=1,expires=0,avg_ttl=0
-```
-
-**Erreurs du serveur** (pas de Valkey pour ces cas : ce sont les messages imposés par l'énoncé) :
-
-| Situation | Réponse |
-|---|---|
-| bug interne (une `RuntimeException` dans une commande) | `(error) ERR internal error` |
-| `SAVE` qui échoue (disque plein, dossier interdit…) | `(error) ERR saving failed, see server logs` |
-
-**Erreurs de protocole** : le serveur répond, puis **ferme la connexion**. Elles ne se testent pas avec `valkey-cli`, qui envoie toujours des commandes bien formées : envoyez les octets vous-même (`printf '*abc\r\n' | nc localhost 6380`, ou un test JUnit sur `RespReader`).
-
-| Octets reçus | Réponse |
-|---|---|
-| `*abc\r\n` | `-ERR Protocol error: invalid multibulk length` |
-| `*1\r\n$abc\r\n` | `-ERR Protocol error: invalid bulk length` |
-| `*1\r\n+PING\r\n` | `-ERR Protocol error: expected '$', got '+'` |
-
----
-
-## Séance 4 — `SET` conditionnel
+### `SET` conditionnel
 
 | Commande | Effet | Réponse |
 |---|---|---|
@@ -264,12 +271,47 @@ SET verrou b NX          => (nil)
 GET verrou               => "a"
 SET autre c XX           => (nil)
 SET verrou d NX XX       => (error) ERR syntax error
+SET verrou e EX 100 NX   => (nil)
 SET nouveau e NX EX 100  => OK
 TTL nouveau              => (integer) 100
 SETNX verrou f           => (integer) 0
 SETNX libre f            => (integer) 1
 SETNX verrou             => (error) ERR wrong number of arguments for 'setnx' command
 ```
+
+Valkey vérifie **toute** la syntaxe avant de regarder si la clé existe : `SET verrou x NX EX abc` répond `ERR value is not an integer or out of range`, même si `verrou` existe.
+
+### 🔵 `INFO`
+
+Le format est imposé par l'énoncé de la séance 3 (§3), car Valkey en affiche des centaines de lignes. Seule la ligne `# Keyspace` est identique à Valkey :
+
+```text
+DBSIZE                     => (integer) 1
+INFO keyspace              => (extrait) db0:keys=1,expires=0,avg_ttl=0
+```
+
+Base vide : la section `# Keyspace` est présente, mais sans ligne `db0`.
+
+**Erreurs du serveur** (pas de Valkey pour ces cas : ce sont les messages imposés par l'énoncé) :
+
+| Situation | Réponse |
+|---|---|
+| bug interne (une `RuntimeException` dans une commande) | `(error) ERR internal error` |
+| `SAVE` qui échoue (disque plein, dossier interdit…) | `(error) ERR saving failed, see server logs` |
+
+**Erreurs de protocole** : le serveur répond, puis **ferme la connexion**. Elles ne se testent pas avec `valkey-cli` ni `Cli`, qui envoient toujours des commandes bien formées : envoyez les octets vous-même (`printf '*abc\r\n' | nc localhost 6380`, ou un test JUnit sur `RespReader`).
+
+| Octets reçus | Réponse |
+|---|---|
+| `*abc\r\n` | `-ERR Protocol error: invalid multibulk length` |
+| `*1\r\n$abc\r\n` | `-ERR Protocol error: invalid bulk length` |
+| `*1\r\n+PING\r\n` | `-ERR Protocol error: expected '$', got '+'` |
+| `*1\r\n$-1\r\n` | `-ERR Protocol error: invalid bulk length` |
+
+Deux cas **sans** réponse : `*0\r\n` et `*-1\r\n` (une commande vide) sont ignorés, la connexion continue. Une ligne vide en inline aussi.
+
+En inline (une commande tapée à la main), Valkey comprend les guillemets : `SET "a b" c`. Ce n'est pas exigé : découper sur les espaces suffit.
+---
 
 ## Séance 4 — Limites, `AUTH`, `CONFIG`
 
@@ -293,10 +335,11 @@ AUTH                     => (error) ERR wrong number of arguments for 'auth' com
 AUTH a b c               => (error) ERR syntax error
 ```
 
-Sans mot de passe configuré, `AUTH secret` répond :
+Sans mot de passe configuré (la variable n'existe pas) :
 
 ```text
-(error) ERR AUTH <password> called without any password configured for the default user. Are you sure your configuration is correct?
+AUTH secret              => (error) ERR AUTH <password> called without any password configured for the default user. Are you sure your configuration is correct?
+AUTH default secret      => OK               l'utilisateur « default » n'a pas de mot de passe : tout est accepté
 ```
 
 🟣 🔒 **`CONFIG`** : `CONFIG GET` répond un tableau `[nom, valeur]`, ou `[]` pour un paramètre inconnu.
@@ -311,7 +354,11 @@ CONFIG SET dbfilename ../x        => (error) ERR CONFIG SET failed (possibly rel
 CONFIG SET dbfilename autre.resp  => OK
 CONFIG SET inconnu 1              => (error) ERR Unknown option or number of arguments for CONFIG SET - 'inconnu'
 CONFIG FOO bar                    => (error) ERR unknown subcommand 'FOO'. Try CONFIG HELP.
+CONFIG                            => (error) ERR wrong number of arguments for 'config' command
+CONFIG SET dbfilename             => (error) ERR wrong number of arguments for 'config|set' command
 ```
+
+Valkey 8 accepte aussi plusieurs paramètres et des motifs : `CONFIG GET dir dbfilename`, `CONFIG GET db*`. Ce n'est pas exigé : un seul nom exact suffit.
 
 Ici, **le TP s'écarte de Valkey 8**, qui refuse aussi `CONFIG SET dbfilename` (paramètre protégé) : nous l'acceptons pour un nom de fichier simple, afin que vous écriviez la vérification de chemin (support S3, §5.5). Le message pour un chemin est celui des anciennes versions de Redis.
 
@@ -322,5 +369,5 @@ Ici, **le TP s'écarte de Valkey 8**, qui refuse aussi `CONFIG SET dbfilename` (
 1. Si vous avez Valkey : demandez-lui (`valkey-cli`).
 2. Sinon, cherchez la commande dans `tests/sN.expected` : chaque ligne `=> …` est la réponse exacte de Valkey à la commande au-dessus.
 
-Avec `nc` plutôt que `valkey-cli` : les guillemets marchent (`SET "a b" "c d"`), mais les réponses arrivent brutes (`+OK`, `$3`, `c d`), et les accents dépendent de l'encodage du terminal. Pour vérifier une réponse au caractère près, préférez un test JUnit.
+Sans `valkey-cli`, `java tools/Cli.java` parle à votre serveur de la même façon (guillemets et accents compris). `nc` ne sert qu'à envoyer des octets bruts : il ne comprend pas les guillemets.
 3. Sinon, la documentation officielle : [valkey.io/commands](https://valkey.io/commands/). Elle décrit chaque commande et ses réponses.

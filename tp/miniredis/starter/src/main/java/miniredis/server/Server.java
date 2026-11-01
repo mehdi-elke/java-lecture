@@ -6,9 +6,11 @@ import miniredis.protocol.RespReader;
 import miniredis.protocol.RespWriter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
+import java.util.logging.LogManager;
 
 /**
  * Le serveur : accepte les connexions et transmet chaque commande au {@link CommandProcessor}.
@@ -21,6 +23,12 @@ import java.util.List;
 public final class Server {
 
     public static void main(String[] args) throws IOException {
+        // Configuration des logs (séance 3) : src/main/resources/logging.properties
+        try (InputStream config = Server.class.getResourceAsStream("/logging.properties")) {
+            if (config != null) {
+                LogManager.getLogManager().readConfiguration(config);
+            }
+        }
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 6380;
         CommandProcessor processor = new CommandProcessor();
 

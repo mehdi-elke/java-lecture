@@ -1,6 +1,7 @@
 package miniredis.protocol;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -40,7 +41,7 @@ public final class RespReader {
             return null;
         }
         if (first != '*') {
-            String line = ((char) first + readLine()).trim();
+            String line = readLine(first).trim();
             return line.isEmpty() ? List.of() : List.of(line.split("\\s+"));
         }
         int count = Integer.parseInt(readLine());
@@ -61,9 +62,14 @@ public final class RespReader {
     }
 
     private String readLine() throws IOException {
-        StringBuilder line = new StringBuilder();
-        int c;
-        while ((c = in.read()) != -1) {
+        return readLine(in.read());
+    }
+
+    /** Lit une ligne dont le premier octet est déjà lu. Les octets sont décodés en UTF-8 (é = 2 octets). */
+    private String readLine(int first) throws IOException {
+        ByteArrayOutputStream line = new ByteArrayOutputStream();
+        int c = first;
+        while (c != -1) {
             if (c == '\r') {
                 in.read(); // \n
                 break;
@@ -71,8 +77,9 @@ public final class RespReader {
             if (c == '\n') {
                 break;
             }
-            line.append((char) c);
+            line.write(c);
+            c = in.read();
         }
-        return line.toString();
+        return line.toString(StandardCharsets.UTF_8);
     }
 }
