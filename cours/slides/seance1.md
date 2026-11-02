@@ -31,7 +31,7 @@ Rappelez que le support détaillé est partagé : les slides ne contiennent pas 
 | 4 | Plusieurs clients, SQL et sécurité 🔒 |
 
 Chaque séance : **cours court** entrecoupé d'**ateliers** 🛠️ sur votre machine, puis **TP en classe**.
-Le TP, fil rouge des 4 séances : écrire **votre propre serveur compatible Redis**.
+Le TP, fil rouge des 4 séances, **au choix** : un raccourcisseur de liens guidé pas à pas, ou votre propre serveur compatible Redis.
 
 <!--
 Durée : 1 min (présentation personnelle comprise)
@@ -50,12 +50,12 @@ Se présenter en une phrase : parcours, ce qu'on fait au quotidien avec Java.
 | Avant la séance 2 | TP rendu sur GitHub : fait, et `mvn test` passe |
 | Séances 2, 3, 4 | QCM de 10 min sur la séance précédente |
 | Séance 2 | **3 min** avec moi : expliquer et modifier votre code du TP |
-| Fin des séances 2 et 4 | TP rendu sur GitHub, comparé à Valkey |
+| Fin des séances 2 et 4 | TP rendu sur GitHub, vérifié par des tests de correction |
 | Séance 4 | **3 min** avec moi : expliquer une correction de sécurité |
 
 <!--
 Durée : 2 min
-Poids proposés (prive/tp-miniredis/README.md §5, à valider avant d'annoncer des chiffres) : rendu S1 5 %, vérification S2 10 %, QCM 3 × 10 %, jalon S2 20 %, jalon S4 25 %, oral S4 10 %.
+Même grille pour les deux sujets de TP. Poids proposés (prive/tp-miniredis/README.md §5, à valider avant d'annoncer des chiffres) : rendu S1 5 %, vérification S2 10 %, QCM 3 × 10 %, jalon S2 20 %, jalon S4 25 %, oral S4 10 %.
 Message : le code rendu compte peu en lui-même. Ce qui compte, c'est ce que vous savez en faire devant moi.
 -->
 
@@ -70,7 +70,7 @@ Message : le code rendu compte peu en lui-même. Ce qui compte, c'est ce que vou
 **L'IA est autorisée. Mais :**
 - **Vous êtes évalués sans elle** : QCM, et 3 minutes pour expliquer et modifier **votre** code.
 - **Cherchez 15 min seul** avant de demander. Demandez une **explication**, pas du code.
-- **Valkey et vos tests ont le dernier mot**, pas l'IA. Elle oublie souvent les cas limites.
+- **Les tests (et Valkey) ont le dernier mot**, pas l'IA. Elle oublie souvent les cas limites.
 - **Pas de code que vous ne savez pas expliquer** dans votre dépôt.
 
 <!--
@@ -1199,39 +1199,62 @@ Les étudiants avancés : attaquez les défis pendant que les autres terminent l
 
 ---
 
+## Le TP : deux sujets au choix
+
+| | 🔗 ShortLink | 🗄️ Mini-Redis |
+|---|---|---|
+| Le projet | un raccourcisseur de liens | un serveur compatible Redis |
+| On vise | faire passer des tests fournis | répondre exactement comme Valkey |
+| Guidage | pas à pas | des objectifs |
+| Installation | Java et Maven | + Docker conseillé |
+
+**Mêmes notions, même évaluation.** Vous hésitez ? **ShortLink.**
+Le choix se fait aujourd'hui, pour les 4 séances.
+
+<!--
+Durée : 2 min
+Présentation des deux sujets : tp/README.md.
+Insister : ShortLink n'est pas « le TP facile mal noté ». Même grille, mêmes notions, et ses 🔵 / 🟣 occupent les rapides. Un TP fini et compris vaut mieux qu'un Mini-Redis à moitié fait.
+Ne pas laisser un débutant partir sur Mini-Redis par fierté : lui proposer de commencer ShortLink, et de regarder Mini-Redis s'il finit le 🟢 en avance.
+-->
+
+---
+
 ## Pour le TP
 
-Vous allez écrire **votre propre serveur compatible Redis / Valkey**. Aujourd'hui, vous réutiliserez :
+Aujourd'hui, vous réutiliserez :
 
 - `switch` en expression sur une `String`, méthodes `static`
-- `List` et `Map` en lecture (§3.8), `String` et `StringBuilder`
-- `Long.parseLong`, `try` / `catch`, `Math.addExact` 🔒
-- 🔵 la différence entre caractères et octets (§4.7)
+- `List` et `Map` (§3.8), `String` et `StringBuilder`
+- valider une entrée par liste blanche 🔒 (§4.3)
+- `Math.addExact` contre le débordement 🔒 (§2.6)
 - JUnit : un test par comportement, sans oublier les entrées invalides
 
-> La spécification, c'est le vrai serveur : **« faites comme Valkey »**.
+> Lisez les tests fournis : ils sont la spécification. Pour Mini-Redis, la spécification, c'est le vrai serveur : **« faites comme Valkey »**.
 
 <!--
 Durée : 1 min
-Transition vers le TP. Le code réseau et le protocole sont fournis : on écrit les commandes.
+Transition vers le TP. ShortLink : la console et le modèle de commande (add) sont fournis. Mini-Redis : le code réseau et le protocole sont fournis. Dans les deux cas, on écrit les commandes.
 -->
 
 ---
 
 ## 🛠️ TP — Prise en main (25 min)
 
-1. **Récupérer le projet** : [github.com/mehdi-elke/java-lecture](https://github.com/mehdi-elke/java-lecture) → *Code* → *Download ZIP*. Copiez le dossier `tp/miniredis/starter` où vous voulez.
-2. **L'ouvrir dans IntelliJ**, puis `mvn test` : tout passe.
-3. **Lancer Valkey** : `docker run -d --rm --name ref-valkey -p 6379:6379 valkey/valkey:8`
-4. **Lancer votre serveur** : ▶ sur `Server.main` (port 6380).
-5. **Comparer** : `java tools/Compare.java tests/s1.txt`
+1. **Récupérer** : [github.com/mehdi-elke/java-lecture](https://github.com/mehdi-elke/java-lecture) → *Code* → *Download ZIP*.
+   Copiez `tp/shortlink/starter` **ou** `tp/miniredis/starter` où vous voulez.
+2. **L'ouvrir dans IntelliJ**, puis `mvn test` : `BUILD SUCCESS`.
+3. **Suivre le §0 de l'énoncé** : `tp/<sujet>/enonce/seance1.md`.
 
-📄 Énoncé : `tp/miniredis/enonce/seance1.md`, sur le même dépôt GitHub.
+**Mini-Redis seulement** : lancer Valkey,
+`docker run -d --rm --name ref-valkey -p 6379:6379 valkey/valkey:8`
+puis ▶ sur `Server.main`, et `java tools/Compare.java tests/s1.txt`.
 
 <!--
 Durée : 25 min
-Passer dans les rangs : c'est ici que Docker bloque. Sans Docker : installer Valkey directement (brew install valkey, apt install valkey, ou dans WSL), voir la présentation du TP. En attendant, Compare bascule seul sur les réponses enregistrées (tests/s1.expected) et enonce/specification.md donne toutes les réponses : personne n'est bloqué.
-Les rapides enchaînent sur le §1 (PING, ECHO) sans attendre.
+ShortLink : mvn test doit afficher 41 tests, 40 skipped. Les « skipped » sont normaux : chaque exercice commence par supprimer un @Disabled.
+Mini-Redis : passer dans les rangs, c'est ici que Docker bloque. Sans Docker : installer Valkey directement (brew install valkey, apt install valkey, ou dans WSL), voir la présentation du TP. En attendant, Compare bascule seul sur les réponses enregistrées (tests/s1.expected) et enonce/specification.md donne toutes les réponses : personne n'est bloqué.
+Les rapides enchaînent sur le §1 sans attendre.
 -->
 
 ---
@@ -1241,7 +1264,7 @@ Les rapides enchaînent sur le §1 (PING, ECHO) sans attendre.
 
 # ☕ Pause — 15 minutes
 
-Reprise : **TP, `PING` et `ECHO`**
+Reprise : **TP, §1 de l'énoncé**
 
 <!--
 Durée : 15 min
@@ -1269,14 +1292,14 @@ enseignant: prive/qcms/s1-diagnostic-questions.md prive/qcms/s1-diagnostic-corri
 
 **À rendre : la veille de la séance 2, à 23h59**, sur un dépôt GitHub **privé**.
 
-- Terminez les commandes 🟢 de l'énoncé : `PING` → `DECRBY`.
-- Un test JUnit par commande, et `mvn test` qui passe.
-- Un commit par commande, poussé sur GitHub.
+- Terminez les exercices 🟢 de l'énoncé.
+- `mvn test` qui passe, et des tests JUnit à vous.
+- Un commit par exercice, poussé sur GitHub.
 - Invitez l'enseignant : **`mehdi-elke`**.
 
 En séance 2 : **3 minutes avec moi** pour expliquer et modifier votre code.
 
-📄 Tout est détaillé dans `tp/miniredis/enonce/rendu-seance1.md`.
+📄 Tout est détaillé dans `tp/<sujet>/enonce/rendu-seance1.md`.
 
 <!--
 Durée : 5 à 7 min, questions comprises
