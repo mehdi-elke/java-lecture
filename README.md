@@ -2,12 +2,16 @@
 
 Supports du module Java (Java 25 LTS) : 16 heures, en 4 séances de 4 h. Chaque séance commence par environ 1 h de cours, suivie de TP.
 
-| Séance | Thème | TP Mini-Redis |
-|---|---|---|
-| 1 | Bases du langage, Maven et JUnit | Premières commandes : `PING`, `INCR`, `APPEND`… |
-| 2 | Classes, `record`, `enum`, héritage, interfaces, collections | Réorganisation en classes, listes, expiration des clés |
-| 3 | Lambdas, streams, exceptions, fichiers | Robustesse, sauvegarde sur fichier |
-| 4 | Concurrence, JDBC, sécurité | Plusieurs clients, sauvegarde H2, injection SQL |
+| Séance | Thème | Slides | Support détaillé |
+|---|---|---|---|
+| 0 | Présentation du module | [PDF](pdf/slides/seance0_syllabus.pdf) · [md](cours/slides/seance0_syllabus.md) | — |
+| Avant la 1 | Installer l'environnement | — | [PDF](pdf/supports/avant-seance1.pdf) · [md](cours/supports/avant-seance1.md) |
+| 1 | Bases du langage, Maven et JUnit | [PDF](pdf/slides/seance1.pdf) · [md](cours/slides/seance1.md) | [PDF](pdf/supports/seance1.pdf) · [md](cours/supports/seance1.md) |
+| 2 | Classes, `record`, `enum`, héritage, interfaces, collections | [PDF](pdf/slides/seance2.pdf) · [md](cours/slides/seance2.md) | [PDF](pdf/supports/seance2.pdf) · [md](cours/supports/seance2.md) |
+| 3 | Lambdas, streams, exceptions, fichiers | [PDF](pdf/slides/seance3.pdf) · [md](cours/slides/seance3.md) | [PDF](pdf/supports/seance3.pdf) · [md](cours/supports/seance3.md) |
+| 4 | Concurrence, JDBC, sécurité | [PDF](pdf/slides/seance4.pdf) · [md](cours/slides/seance4.md) | [PDF](pdf/supports/seance4.pdf) · [md](cours/supports/seance4.md) |
+
+Le markdown est toujours la version la plus à jour ; les PDF sont régénérés à chaque mise à jour du cours.
 
 ## Le dépôt
 
@@ -20,10 +24,13 @@ Supports du module Java (Java 25 LTS) : 16 heures, en 4 séances de 4 h. Chaque 
 │   ├── supports/         # Supports détaillés, à lire après le cours
 │   ├── modele/           # Exemple de référence utilisé dans le cours (FoodFast)
 │   └── theme/            # Thème Marp
+├── pdf/
+│   ├── slides/           # Slides en PDF
+│   └── supports/         # Supports détaillés en PDF
 ├── tp/
-│   └── miniredis/
-│       ├── enonce/       # Énoncés, un par séance
-│       └── starter/      # Projet Maven de départ
+│   ├── README.md         # Choisir son sujet de TP
+│   ├── miniredis/        # Sujet 1 : un mini-Redis
+│   └── shortlink/        # Sujet 2 : un raccourcisseur de liens, guidé
 ├── tools/                # Vérification et génération des supports (Node.js)
 └── build_support.sh
 ```
@@ -32,18 +39,20 @@ Deux supports par séance :
 * **Slides** (`cours/slides/`) : ce qui est projeté en cours, volontairement léger.
 * **Support détaillé** (`cours/supports/`) : les explications complètes, le code complet et les approfondissements.
 
-## Le TP : un mini-Redis
+## Le TP : deux sujets au choix
 
-Vous écrivez en Java un serveur clé-valeur compatible avec le vrai client `valkey-cli`. La règle est simple : votre serveur doit répondre **exactement comme Valkey**. L'outil `tools/Compare.java` envoie les mêmes commandes aux deux serveurs et affiche les différences. Tout commence dans `tp/miniredis/enonce/`.
+Choisissez votre sujet avec [`tp/README.md`](tp/README.md).
 
-Prérequis : JDK 25, Maven, et Docker pour lancer le Valkey de référence.
+**ShortLink** (`tp/shortlink/`) : un raccourcisseur de liens, guidé pas à pas, pour celles et ceux qui découvrent la programmation. Chaque comportement attendu est décrit par un test fourni. Prérequis : JDK 25 et Maven.
+
+**Mini-Redis** (`tp/miniredis/`) : vous écrivez en Java un serveur clé-valeur compatible avec le vrai client `valkey-cli`. La règle est simple : votre serveur doit répondre **exactement comme Valkey**. L'outil `tools/Compare.java` envoie les mêmes commandes aux deux serveurs et affiche les différences. Prérequis : JDK 25, Maven, et Docker pour lancer le Valkey de référence.
 
 ## Générer les supports
 
 Prérequis : Node.js 20+, JDK 25, Google Chrome.
 
 ```bash
-./build_support.sh               # vérifie puis génère outputs/slides et outputs/supports (HTML et PDF)
+./build_support.sh               # vérifie, génère outputs/ (HTML et PDF) et copie les PDF dans pdf/
 ./build_support.sh --skip-checks # génère sans vérifier
 ```
 

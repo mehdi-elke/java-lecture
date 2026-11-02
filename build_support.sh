@@ -37,5 +37,10 @@ fi
 echo "--- Génération des supports ---"
 node build.mjs
 
+echo "--- Copie des PDF étudiants dans pdf/ (suivi par git) ---"
+mkdir -p ../pdf/slides ../pdf/supports
+cp ../outputs/slides/pdf/*.pdf ../pdf/slides/
+cp ../outputs/supports/pdf/*.pdf ../pdf/supports/
+
 echo "--- Génération des supports enseignant (si prive/ est présent) ---"
 node build-enseignant.mjs
