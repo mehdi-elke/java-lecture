@@ -17,7 +17,7 @@
 | 6 | Relire un code | 🔵 🔒 | 20 min |
 | 7 | Alias et codes imprévisibles | 🟣 🔒 | |
 
-Ce que vous ne finissez pas en séance se termine à la maison, pour le [rendu](rendu-seance1.md).
+Les durées sont celles d'un étudiant à l'aise : le socle 🟢 fait plus que les 2 h de TP. **En séance, visez la fin du §3.** Le §4, et ce que vous ne finissez pas, se termine à la maison, pour le [rendu](rendu-seance1.md).
 
 ---
 
@@ -27,7 +27,7 @@ Ce que vous ne finissez pas en séance se termine à la maison, pour le [rendu](
 2. Lancez `mvn test` : `BUILD SUCCESS`, 41 tests, 40 « skipped ». Les lignes `WARNING: ... sun.misc.Unsafe ...` sont normales avec Java 25 : seul `BUILD FAILURE` est une erreur.
 3. Mettez le projet sous Git tout de suite : dans IntelliJ, **VCS → Enable Version Control Integration → Git**, puis un premier commit « Projet de départ » (⌘K ou Ctrl+K).
 4. Ouvrez `PremierTest.java` et lancez-le avec le ▶ vert à côté de `class PremierTest` : il passe. C'est à cela que ressemble un test JUnit.
-5. Lancez la console : ▶ à côté de `main` dans `Main.java`. Tapez `help`, puis `add https://foodfast.fr`. **Erreur** : `UnsupportedOperationException: §2 : à écrire`. `add` a besoin de méthodes que vous n'avez pas encore écrites. Tapez `quit`.
+5. Lancez la console : ▶ à côté de `main` dans `Main.java`. Tapez `help`, puis `add https://foodfast.fr`. **Le programme plante et s'arrête**, avec en rouge `UnsupportedOperationException: §2 : à écrire`. C'est normal : `add` a besoin de méthodes que vous n'avez pas encore écrites. La console ne marchera qu'à la fin du §3.
 6. Lisez `Shell.java` en entier. Repérez :
    - le `switch` qui choisit la méthode selon le premier mot ;
    - `add(...)`, et ses quatre étapes commentées : c'est le modèle de toutes les commandes ;
@@ -118,9 +118,9 @@ Maintenant, relancez la console : `add https://foodfast.fr` répond `Lien créé
 | `open <code>` | l'URL longue, et un clic de plus | `Erreur : code invalide`, `Erreur : code inconnu` |
 | `clicks <code>` | le nombre de clics : `2` | les mêmes |
 | `delete <code>` | `Lien supprimé : 4c92` | les mêmes |
-| `list` | une ligne par lien, dans l'ordre de création : `4c92 -> https://foodfast.fr (2 clics)` | |
+| `list` | une ligne par lien, dans l'ordre de création : `4c92 -> https://foodfast.fr (2 clics)`. Pas de lien : `(aucun lien)` | |
 
-Avec un mauvais nombre d'arguments : `Erreur : usage : open <code>` (avec `usage(...)`, déjà écrite).
+Avec un mauvais nombre d'arguments : `Erreur : usage : open <code>`, `Erreur : usage : list` (`list tout`)… avec `usage(...)`, déjà écrite.
 
 **Pas à pas**
 
@@ -130,7 +130,10 @@ Avec un mauvais nombre d'arguments : `Erreur : usage : open <code>` (avec `usage
    2. un code valide (`Codes.isValid`), puis un code connu (`links.containsKey(code)`) ;
    3. le travail : un clic de plus dans `clicks` ;
    4. la réponse : `links.get(code)`.
-3. Faites passer les tests de `open`, puis faites `clicks` et `delete`. Vous allez écrire trois fois la même vérification du code : déplacez-la dans une méthode à vous, par exemple `private String checkCode(String code)`, qui rend le message d'erreur ou `null` si tout va bien.
+3. Faites passer les tests de `open`, puis faites `clicks` et `delete`.
+   - `clicks` doit rendre une `String`, mais `clicks.get(code)` est un `Integer` : `return clicks.get(code);` ne compile pas. Convertissez avec `String.valueOf(...)`.
+   - Le champ `clicks` et la méthode `clicks(...)` ont le même nom : Java les distingue, `clicks.get(...)` désigne la `Map`.
+   - Vous allez écrire trois fois la même vérification du code : déplacez-la dans une méthode à vous, par exemple `private String checkCode(String code)`, qui rend le message d'erreur ou `null` si tout va bien.
 4. `list` : parcourez `links` avec
    ```java
    for (Map.Entry<String, String> link : links.entrySet()) {
@@ -138,7 +141,12 @@ Avec un mauvais nombre d'arguments : `Erreur : usage : open <code>` (avec `usage
        String url = link.getValue();
    }
    ```
-   et construisez le texte avec un `StringBuilder`. Les lignes sont séparées par `'\n'`, sans `'\n'` après la dernière. Pas de lien : `(aucun lien)`.
+   et construisez le texte avec un `StringBuilder`. Les lignes sont séparées par `'\n'`, sans `'\n'` après la dernière : ajoutez le `'\n'` **avant** chaque ligne, sauf la première.
+   ```java
+   if (!text.isEmpty()) {   // text est votre StringBuilder : déjà une ligne ?
+       text.append('\n');
+   }
+   ```
 
 **Pièges**
 - `0 clic` et `1 clic`, mais `2 clics` : regardez bien le test.
@@ -153,11 +161,18 @@ Essayez ensuite toutes vos commandes dans la console.
 
 `https://www.FoodFast.fr:8443/menu?x=1` a pour domaine `foodfast.fr` : en minuscules, sans `www.`, sans port (`:8443`), sans chemin.
 
-**Pas à pas** : enlevez le préfixe `https://`, coupez au premier `/`, `?` ou `#`, gardez ce qui suit le dernier `@` (voir le piège ci-dessous), coupez au `:`, passez en minuscules, enlevez `www.` au début. Dans cet ordre : `https://ada:secret@foodfast.fr` contient deux `:`. Les méthodes utiles : `indexOf`, `substring`, `toLowerCase`, `startsWith`.
+**Pas à pas** : enlevez le préfixe `https://`, coupez au premier `/`, puis au premier `?`, puis au premier `#` (trois coupes successives, une petite méthode à vous évite de l'écrire trois fois), gardez ce qui suit le dernier `@` (voir le piège ci-dessous), coupez au `:`, passez en minuscules, enlevez `www.` au début. Dans cet ordre : `https://ada:secret@foodfast.fr` contient deux `:`. Les méthodes utiles : `indexOf`, `substring`, `toLowerCase`, `startsWith`.
 
 🔒 **Le piège de l'arobase.** Dans `https://foodfast.fr@evil.example/connexion`, ce qui précède `@` est un **identifiant de connexion**, pas le site. Le navigateur va sur `evil.example`. C'est une technique d'hameçonnage réelle : le lecteur voit `foodfast.fr` et fait confiance au lien. Le domaine est ce qui suit le **dernier** `@` (`lastIndexOf`).
 
-Puis la commande `domains` : le nombre de liens par domaine, par ordre alphabétique. Comptez dans une `Map<String, Integer>`. Pour l'ordre alphabétique, cherchez ce que fait une `TreeMap`.
+Puis la commande `domains` : le nombre de liens par domaine, par ordre alphabétique, une ligne par domaine.
+
+```
+example.com 1
+foodfast.fr 2
+```
+
+Pas de lien : `(aucun lien)`. Les URL sont dans `links.values()`. Comptez dans une `Map<String, Integer>`. Pour l'ordre alphabétique, cherchez ce que fait une `TreeMap` (même usage qu'une `HashMap`, les clés sont triées).
 
 ## 6. 🔵 🔒 Relire un code (20 min)
 
@@ -165,16 +180,26 @@ Puis la commande `domains` : le nombre de liens par domaine, par ordre alphabét
 
 Pour relire `472` en base 10 : 0 × 10 + 4 = 4, puis 4 × 10 + 7 = 47, puis 47 × 10 + 2 = 472. En base 62, multipliez par 62, et la valeur d'un symbole est `ALPHABET.indexOf(c)`.
 
-🔒 **Le débordement.** Un code de 12 caractères peut dépasser le plus grand `long`. En Java, le calcul ne s'arrête pas : il **déborde** et donne un nombre négatif, sans aucune erreur (support S1, §2.6). Un code valide qui désigne silencieusement le lien n° -8 000 000 000 est un bug sérieux. Cherchez les méthodes de `Math` qui lèvent une exception au lieu de déborder, et transformez cette exception en `IllegalArgumentException`.
+🔒 **Le débordement.** Un code de 12 caractères peut dépasser le plus grand `long`. En Java, le calcul ne s'arrête pas : il **déborde** et donne un nombre négatif, sans aucune erreur (support S1, §2.6). Un code valide qui désigne silencieusement le lien n° -8 000 000 000 est un bug sérieux. Cherchez les méthodes de `Math` qui lèvent une exception au lieu de déborder (support §2.6), et transformez cette exception en `IllegalArgumentException` (`try`/`catch`, support §4.6) :
+
+```java
+try {
+    // le calcul qui peut déborder
+} catch (ArithmeticException e) {
+    throw new IllegalArgumentException("code trop grand");
+}
+```
 
 ## 7. 🟣 🔒 Alias et codes imprévisibles (bonus)
 
 **Fichier de test** : `BonusTest`.
 
-1. **Les alias.** `add https://foodfast.fr/promo promo` crée le lien avec le code `promo`, s'il est valide et libre. Attention : un alias peut prendre un code que la suite (`4c92`, `4c93`…) donnera plus tard. Que doit faire `add` sans alias ? Le test `anAliasCannotStealAFutureSequentialCode` vous le dit.
+1. **Les alias.** `add https://foodfast.fr/promo promo` crée le lien avec le code `promo`, s'il est valide et libre. L'URL se vérifie d'abord (`Erreur : URL invalide`), puis l'alias (`Erreur : code invalide`, `Erreur : code déjà pris`). Attention : un alias peut prendre un code que la suite (`4c92`, `4c93`…) donnera plus tard. Que doit faire `add` sans alias ? Le test `anAliasCannotStealAFutureSequentialCode` vous le dit.
 2. **Les codes imprévisibles.** Nos codes se suivent : avec `4c92`, on devine `4c93`, `4c94`… et on peut visiter **tous** les liens créés, y compris ceux qui n'étaient destinés qu'à une seule personne. Des services réels ont exposé des documents privés de cette façon. Écrivez `Codes.random(int length)` : un code de `length` symboles tirés au hasard. Utilisez `SecureRandom`, pas `Random` : la suite de `Random` se devine à partir de quelques valeurs observées (support S1, défi 6).
 
 Avec 8 symboles, il y a 62⁸, soit environ 218 000 milliards de codes possibles. Combien d'essais faut-il pour tomber sur un des 1 000 liens existants ?
+
+3. **La règle cassée.** Le §4 dit : « un code supprimé n'est jamais redonné ». Avec les alias, ce n'est plus vrai. Trouvez une suite de commandes qui redonne un code supprimé (indice : un alias choisi parmi les codes que la suite donnera), écrivez le test qui le montre, puis corrigez `add`.
 
 ---
 
