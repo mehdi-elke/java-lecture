@@ -1117,62 +1117,38 @@ Votre IDE (IntelliJ, VS Code) lit le pom.xml et configure le projet tout seul.
 
 ---
 
-## `pom.xml` (1/2) : identité et Java 25
+## `pom.xml` : Java 25 et JUnit
 
 ```xml
-<project xmlns="http://maven.apache.org/POM/4.0.0">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>fr.foodfast</groupId>
-    <artifactId>foodfast</artifactId>
+<project>
+    <groupId>fr.foodfast</groupId>          <!-- les coordonnées -->
+    <artifactId>foodfast</artifactId>       <!-- du projet       -->
     <version>1.0-SNAPSHOT</version>
-
     <properties>
         <maven.compiler.release>25</maven.compiler.release>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    <!-- ... dépendances et plugins : slide suivante -->
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>6.1.3</version>
+            <scope>test</scope>             <!-- pour les tests -->
+        </dependency>
+    </dependencies>
 </project>
 ```
 
-- `groupId` + `artifactId` + `version` : les coordonnées du projet.
+- Dans le TP, le `pom.xml` est **fourni** : à savoir lire, pas à écrire.
 
-<div class="support">📖 Support §5.3 — Le pom.xml minimal</div>
-
-<!--
-Durée : 2 min
-maven.compiler.release=25 : compile pour Java 25 ET vérifie qu'on n'utilise pas d'API absente de Java 25.
-Ancienne forme (source/target 11) dans de vieux tutoriels : à ne pas copier.
--->
-
----
-
-## `pom.xml` (2/2) : JUnit et plugins
-
-```xml
-<dependencies>
-    <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter</artifactId>
-        <version>6.1.3</version>
-        <scope>test</scope>
-    </dependency>
-</dependencies>
-<build><plugins>
-    <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.6.0</version>
-    </plugin>
-</plugins></build>
-```
-
-<div class="support">📖 Support §5.3 — POM complet, avec maven-compiler-plugin 3.16.0</div>
+<div class="support">📖 Support §5.3 — Le pom.xml complet</div>
 
 <!--
 Durée : 2 min
+Extrait : le vrai fichier a aussi modelVersion, l'encodage UTF-8 et les plugins (compiler 3.16.0, surefire 3.6.0, épinglés pour un build reproductible). Complet dans le support §5.3 et dans les starters du TP.
+maven.compiler.release=25 : compile pour Java 25 ET vérifie qu'on n'utilise pas d'API absente de Java 25. Ancienne forme (source/target 11) dans de vieux tutoriels : à ne pas copier.
 scope test : JUnit sert aux tests, il n'est pas livré avec l'application.
-surefire : le plugin qui exécute les tests pendant mvn test (groupId omis : org.apache.maven.plugins par défaut). On épingle sa version pour un build reproductible.
 Piège vu dans de vieux supports : junit:junit:5.8.2 n'existe pas. JUnit 5 et 6, c'est org.junit.jupiter.
-Versions vérifiées sur Maven Central en octobre 2026 : vérifiez-les en début d'année.
+Versions vérifiées sur Maven Central en octobre 2026.
 -->
 
 ---
@@ -1204,6 +1180,37 @@ Durée : 3 min
 Démo live : mvn test (vert), puis casser totalCents (remplacer la multiplication par une addition), relancer : expected: <2850> but was: <...>. Rouge. Réparer.
 Message : le test appelle OrderCalculator.totalCents : il faut une classe NOMMÉE (retour à la partie 1).
 Dans le projet, le fichier commence par package fr.foodfast; (coupé ici pour la place).
+-->
+
+---
+
+## Les assertions, et lire le résultat
+
+```java
+assertEquals(2850, total);                      // attendu, obtenu
+assertTrue(InputValidator.isValidQuantity("3"));
+assertFalse(InputValidator.isValidQuantity("21"));
+assertThrows(IllegalArgumentException.class,
+        () -> OrderCalculator.applyDiscount(2850, 150));
+```
+
+```text
+Tests run: 12, Failures: 1, Errors: 0, Skipped: 2
+BUILD FAILURE
+```
+
+- **Failures** : une assertion fausse. **Errors** : une exception imprévue.
+- **Skipped** : un test désactivé exprès par `@Disabled`.
+- `() -> …` : « le code à exécuter », pour vérifier qu'il lève l'exception. Détails en séance 3.
+
+<div class="support">📖 Support §5.5 et §5.7 — Assertions et tests d'exception</div>
+
+<!--
+Durée : 2 min
+Imports : import static org.junit.jupiter.api.Assertions.*; (Alt+Entrée dans IntelliJ les ajoute un par un).
+Seul BUILD SUCCESS ou BUILD FAILURE compte. Les lignes WARNING au tout début de mvn test (« restricted method », « sun.misc.Unsafe ») sont normales avec Java 25 : elles viennent de Maven lui-même, pas de leur code.
+ShortLink : au départ, mvn test affiche Skipped: 40. Chaque exercice commence par supprimer un @Disabled. C'est normal, le dire maintenant évite vingt questions.
+assertThrows : la recette suffit aujourd'hui. Sans le () ->, la méthode serait appelée avant assertThrows, et l'exception ferait échouer le test.
 -->
 
 ---
@@ -1277,7 +1284,7 @@ void prix_egal_au_seuil_non_compte() {
 Durée : 30 à 40 min
 OPTIONNEL — variable d'ajustement. Le plus utile des ateliers : à faire en priorité si un seul atelier est possible, éventuellement en début de TP.
 Tout le code est sur la slide. Ceux qui ont fait BasketStats à l'atelier 3 testent leur propre classe.
-Create Test : si JUnit manque, IntelliJ propose Fix, qui l'ajoute au pom.xml. Sinon, ajouter le bloc <dependency> de la slide pom.xml (2/2), puis Load Maven Changes.
+Create Test : si JUnit manque, IntelliJ propose Fix, qui l'ajoute au pom.xml. Sinon, ajouter le bloc <dependency> de la slide pom.xml, puis Load Maven Changes.
 Imports du test : import org.junit.jupiter.api.Test; et import static org.junit.jupiter.api.Assertions.assertEquals; (Alt+Entrée les ajoute).
 Vérifier que chacun voit BUILD SUCCESS en terminal : c'est la preuve que Java 25 + Maven + JUnit fonctionnent.
 -->
