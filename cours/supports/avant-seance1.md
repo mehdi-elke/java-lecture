@@ -97,13 +97,11 @@ Sur l'écran d'accueil, cliquez sur **New Project** et remplissez :
 
 Cliquez sur **Create**. La première ouverture peut prendre une à deux minutes : IntelliJ télécharge ce dont Maven a besoin (barre de progression en bas de la fenêtre). Attendez qu'elle se termine.
 
-![Fenêtre New Project remplie](captures/01-new-project.png)
 
 ### Créer la classe `HelloWorld`
 
 Dans le panneau de gauche, dépliez `seance1` → `src` → `main` → `java`. Faites un **clic droit sur `java`** → **New** → **Java Class**, tapez `HelloWorld`, puis Entrée.
 
-![Créer une classe Java](captures/02-new-class.png)
 
 Remplacez le contenu du fichier par :
 
@@ -123,7 +121,6 @@ Le nom de la classe (`HelloWorld`) doit être **exactement** celui du fichier (`
 
 Une **flèche verte ▶** apparaît dans la marge, à gauche de la ligne `public class HelloWorld` et de la ligne `main`. Cliquez dessus, puis sur **Run 'HelloWorld.main()'**.
 
-![Lancer la classe avec la flèche verte](captures/03-run.png)
 
 La fenêtre **Run** s'ouvre en bas et affiche :
 
@@ -134,7 +131,6 @@ Java 25.0.5
 
 La deuxième ligne doit commencer par **Java 25**.
 
-![Résultat dans la fenêtre Run](captures/04-output.png)
 
 ---
 
