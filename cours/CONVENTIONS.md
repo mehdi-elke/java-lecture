@@ -21,7 +21,7 @@ Outils (dans `tools/`, après `npm install`) :
 - Français, **vouvoiement**. Ton direct, phrases courtes.
 - Structure de chaque notion : **Pourquoi ?** (le problème) → **Comment ?** (la solution Java) → **Exemple concret** (FoodFast) → **Piège** (❌ puis ✅).
 - Badges de niveau dans les titres : 🟢 Socle, 🔵 Approfondissement, 🟣 Bonus, 🔒 Sécurité, 🛠️ Atelier (à faire sur sa machine).
-- **Manipuler tôt et souvent.** Chaque partie se termine par un atelier **🛠️ À vous** : 2 à 4 exercices courts et progressifs, avec une durée indicative (⏱️), le résultat attendu et la solution repliée (`<details>`). Les exercices font taper, exécuter, observer (jshell, débogueur, `mvn test`) et réutilisent ce qui précède. Ils ne donnent jamais la solution d'une tâche du TP.
+- **Manipuler tôt et souvent.** Chaque partie se termine par un atelier **🛠️ À vous** : 2 à 4 exercices courts et progressifs, avec une durée indicative (⏱️), le résultat attendu et la solution repliée (`<details>`). Les exercices font taper, exécuter, observer (petits programmes `void main()`, débogueur, `mvn test`). Pas de jshell et réutilisent ce qui précède. Ils ne donnent jamais la solution d'une tâche du TP.
 - Ces ateliers sont une **variable d'ajustement** : l'enseignant les fait en séance, les garde pour le début du TP, ou les laisse en autonomie, selon le rythme du groupe.
 - ❌ et ✅ pour opposer le mauvais et le bon code.
 - Java 25, uniquement des fonctionnalités **finales**. Pas de preview, pas d'API obsolète (`Date`, `Vector`, `Hashtable`, `StringBuffer`, sérialisation comme bonne pratique, `printStackTrace`).
@@ -55,7 +55,7 @@ Règles :
   <!--
   Durée : 3 min
   Question à la salle : que vaut 0.1 + 0.2 ?
-  Démo : jshell
+  Démo : un void main() lancé avec ▶
   -->
   ```
 - **Interactivité** : au moins 2 slides « 🤔 Prédisez la sortie » par séance, et au moins une démo live annoncée en notes.

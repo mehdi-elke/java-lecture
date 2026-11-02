@@ -16,7 +16,7 @@ Du premier `void main()` au premier test JUnit
 <!--
 Durée : 1 min
 Accueil. Présentez le fil rouge du module : FoodFast, une plateforme de livraison de repas.
-Rappelez que le support détaillé est partagé : les slides ne contiennent pas tout.
+Le support détaillé (plus complet que les slides, avec les solutions) est partagé en fin de séance. Pendant la séance, les slides suffisent.
 -->
 
 ---
@@ -100,7 +100,7 @@ Terminer par : « Est-ce que c'est clair pour tout le monde ? Des questions avan
 <!--
 Durée : 2 min
 Message : à la fin de la séance, vous savez écrire une petite fonction métier ET la tester.
-Pour ceux qui connaissent déjà Java : le support contient une section 🟣 « Défis » (Luhn, mot de passe, César…). Vous pouvez l'attaquer dès maintenant.
+Pour ceux qui connaissent déjà Java : le support détaillé contient des défis 🟣 (Luhn, mot de passe, César…). Il est déjà sur GitHub (github.com/mehdi-elke/java-lecture, cours/supports/seance1.md) : donner le lien à ceux qui finissent les ateliers trop vite.
 Question à la salle : qui a déjà écrit du Java ? du C ? du Python ? (ajuster le rythme)
 -->
 
@@ -164,17 +164,24 @@ Montrer Alt+Entrée sur une erreur soulignée en rouge (§0.5).
 ## 🛠️ Le débogueur : voir le programme s'exécuter
 
 ```java
-static int totalCents(int[] pricesCents) {
-    int total = 0;                              // ● point d'arrêt
-    for (int i = 1; i < pricesCents.length; i++) {
-        total = total + pricesCents[i];
+public class BuggyTotal {
+    static int totalCents(int[] pricesCents) {
+        int total = 0;                          // ● point d'arrêt
+        for (int i = 1; i < pricesCents.length; i++) {
+            total = total + pricesCents[i];
+        }
+        return total;
     }
-    return total;                    // {1250, 450, 800} → 1250 ?!
+
+    public static void main(String[] args) {
+        int[] basket = {1250, 450, 800};
+        System.out.println(totalCents(basket)); // 2500 attendu… 1250 ?!
+    }
 }
 ```
 
-1. Clic dans la marge : **point d'arrêt**. 2. ▶ → **Debug**.
-3. **F8** : ligne suivante. 4. Regarder `i` et `total`. 5. **F9** : reprendre.
+1. Clic dans la marge : **point d'arrêt**. 2. ▶ à côté de `main` → **Debug**.
+3. **F8** : ligne suivante. 4. Regarder `i` et `total`. 5. **F9** (Mac : ⌥⌘R) : reprendre.
 
 <div class="support">📖 Support §0.4 — Le débogueur</div>
 
@@ -205,14 +212,14 @@ Question à la salle : où est le bug ? (réponse : i = 1, la case 0 est oublié
 - **Bytecode** : un langage intermédiaire, le même sur toutes les machines.
 - **JVM** (*Java Virtual Machine*) : exécute le bytecode. Elle l'interprète, puis compile à la volée (**JIT**) les parties souvent utilisées.
 - La JVM gère la mémoire : le **ramasse-miettes** (*GC*) libère les objets inutilisés.
-- On installe le **JDK 25** (LTS) : `javac`, `java`, `jshell`…
+- On installe le **JDK 25** (LTS) : `javac`, `java`…
 
 <div class="support">📖 Support §1.1 — JDK, bytecode et JVM</div>
 
 <!--
 Durée : 2 min
 Message : « compilé une fois, exécuté partout ». Java n'est ni purement compilé (comme C) ni purement interprété (comme Python).
-JDK = Java Development Kit ; Java 25 est une LTS (Long-Term Support), comme 17 et 21. Vérification en direct : java -version doit afficher 25. jshell : console interactive (support §1.5).
+JDK = Java Development Kit ; Java 25 est une LTS (Long-Term Support), comme 17 et 21. Vérification en direct : java -version doit afficher 25.
 Pour les profils cyber : pas d'arithmétique de pointeurs, mémoire gérée, bytecode vérifié au chargement. Toute une classe de failles C (buffer overflow) disparaît.
 -->
 
@@ -330,19 +337,49 @@ L'annexe B donne les 12 erreurs de compilation et les 6 erreurs d'exécution les
 
 ## 🛠️ À vous — Partie 1 (15 à 20 min)
 
-1. **Compiler à la main** `Hello.java`, puis provoquer trois erreurs et lire les messages.
-2. **Dans IntelliJ** : une classe `Welcome` qui accueille le restaurant passé en argument.
-3. 🔵 `javap -c Hello` : lire le bytecode.
+<div class="cols"><div>
 
-> Le but n'est pas d'avoir juste : c'est d'avoir **tapé, lancé et lu**.
+**1. Dans un terminal**
 
-<div class="support">📖 Support §1.6 — À vous</div>
+```java
+// Fichier Hello.java
+void main() {
+    IO.println("Bienvenue chez FoodFast !");
+}
+```
+
+```text
+$ javac Hello.java
+$ java Hello
+```
+
+Enlevez un `;`, recompilez, **lisez** l'erreur.
+
+</div><div>
+
+**2. Dans IntelliJ**
+
+```java
+// Fichier FoodFastApp.java
+public class FoodFastApp {
+  public static void main(String[] args) {
+    System.out.println("Bienvenue !");
+  }
+}
+```
+
+▶ à côté de `main`. Changez le message, relancez.
+
+</div></div>
+
+🔵 Après `javac`, lancez `javap -c Hello` : le bytecode.
 
 <!--
 Durée : 15 à 20 min
 OPTIONNEL — variable d'ajustement. À placer ici, ou à garder pour le début du TP selon le rythme.
+Tout le code est sur la slide : rien d'autre à ouvrir. Énoncé détaillé et solutions : support §1.6 (avec un 🔵 de plus : lire args).
 Passer dans les rangs : vérifier que chacun a bien un java -version en 25 et un programme qui tourne dans IntelliJ.
-Les avancés : partie 6 du support (§6.7 Java moderne, défis).
+Les avancés : les défis du support (lien GitHub, voir la slide « Objectifs »).
 -->
 
 ---
@@ -387,6 +424,15 @@ IO.println(dish.length());     // 10 : un objet a des méthodes
 IO.println(coupon.length());   // ❌ NullPointerException
 ```
 
+```text
+   PILE (variables locales)            TAS (objets)
+ +-----------------------------+    +----------------------+
+ | int quantity  = 3           |    |                      |
+ | String dish   = [réf.] ─────┼───→| String "Margherita"  |
+ | String coupon = null        |    |                      |
+ +-----------------------------+    +----------------------+
+```
+
 - Primitif : minuscule (`int`), pas de méthode, jamais `null`.
 - Référence : majuscule (`String`), des méthodes, peut valoir `null`.
 
@@ -395,7 +441,7 @@ IO.println(coupon.length());   // ❌ NullPointerException
 <!--
 Durée : 2 min
 Message : appeler une méthode sur null = NullPointerException, l'erreur la plus fréquente en Java.
-Dessiner au tableau la pile (variables locales) et le tas (objets) : le schéma est dans le support.
+Le schéma : la pile contient les variables locales (un primitif y contient sa valeur), le tas contient les objets. dish contient l'adresse de l'objet, pas l'objet. coupon ne désigne rien : coupon.length() n'a personne à qui s'adresser.
 -->
 
 ---
@@ -457,7 +503,7 @@ IO.println(1 + 2 + " €");
 
 <!--
 Durée : 2,5 min
-Laisser 1 minute de réflexion, vote à main levée, puis démo dans jshell.
+Laisser 1 minute de réflexion, vote à main levée, puis démo : coller les lignes dans un void main() (Predict.java) et lancer avec ▶.
 Réponses : 3 (division entière entre deux int), 1, 3.5, "Total : 12" (évaluation de gauche à droite : String + 1 → "Total : 1", puis + 2), "3 €".
 Message : la division entière TRONQUE. Et dans un ticket, mettez des parenthèses : "Total : " + (1 + 2).
 -->
@@ -573,7 +619,7 @@ total = Math.addExact(total, fee);
 
 <!--
 Durée : 2 min
-Démo live dans jshell : Math.multiplyExact(1250, 2_000_000) → ArithmeticException: integer overflow.
+Démo live : dans un void main(), IO.println(Math.multiplyExact(1250, 2_000_000)); → ArithmeticException: integer overflow.
 Message : un arrêt franc vaut mieux qu’un résultat faux. On verra en partie 4 comment intercepter l’exception avec un try / catch minimal (détails en séance 3).
 -->
 
@@ -581,13 +627,43 @@ Message : un arrêt franc vaut mieux qu’un résultat faux. On verra en partie 
 
 ## 🛠️ À vous — Partie 2 (20 à 30 min)
 
-1. **jshell** : prédire puis vérifier `7 / 2`, `"Total : " + 1 + 2`, `0.1 + 0.2`…
-2. **Une ligne de ticket** : `2 x Margherita = 25,00 €`, avec `formatEuros(int cents)`.
-3. **Au débogueur** : regarder un compteur `int` devenir négatif, puis `Math.addExact`.
+<div class="cols"><div>
 
-> Prédire **avant** d'exécuter : c'est là qu'on apprend.
+**1.** Prédire **sur papier**, puis lancer :
 
-<div class="support">📖 Support §2.8 — À vous</div>
+```java
+// Fichier Predict.java
+void main() {
+  IO.println(7 / 2);
+  IO.println(7 / 2.0);
+  IO.println("Total : " + 1 + 2);
+  IO.println(Integer.MAX_VALUE + 1);
+  IO.println(0.1 + 0.2);
+}
+```
+
+**2.** `static String formatEuros(int cents)`
+`2500` → `"25,00 €"` et `2505` → `"25,05 €"`
+Indice : `cents / 100`, `cents % 100`.
+
+</div><div>
+
+**3. Au débogueur** : point d'arrêt, puis F9.
+À quel tour `orders` devient négatif ?
+
+```java
+void main() {
+  int orders = Integer.MAX_VALUE - 2;
+  for (int r = 1; r <= 5; r++) {
+    orders = orders + 1;    // ●
+    IO.println(orders);
+  }
+}
+```
+
+Puis `Math.addExact(orders, 1)`.
+
+</div></div>
 
 <!--
 Durée : 20 à 30 min
@@ -805,17 +881,19 @@ Piège : get renvoie null si la clé est absente ; stock.get("Sushi") - 1 lève 
 
 ## 🛠️ À vous — Partie 3 (30 à 40 min)
 
-1. `dayLabel(int day)` : le jour de la semaine, avec un `switch`.
-2. `sumUpTo(n)` et `sumEvenUpTo(n)`, suivies **au débogueur**.
-3. `BasketStats` : maximum, nombre au-dessus d'un seuil, moyenne… et le panier vide ?
-
-> L'exercice 3 resservira au §5.8 : gardez-le.
-
-<div class="support">📖 Support §3.9 — À vous</div>
+1. `static String dayLabel(int day)` avec un `switch` :
+   `1` → `"lundi"` … `7` → `"dimanche"`, sinon `"jour invalide"`.
+2. `static long sumUpTo(int n)` : `1 + 2 + … + n`. `sumUpTo(100)` vaut `5050`.
+   Suivez `sumUpTo(4)` **au débogueur**. Pourquoi `long` et pas `int` ?
+3. 🔵 Une classe `BasketStats`, avec `{1250, 450, 800, 1590}` :
+   - `maxCents(prices)` → `1590`
+   - `countAbove(prices, 1000)` → `2` (strictement au-dessus)
+   - `averageCents(prices)` → `1022`
+   - et sur un tableau **vide** ? À vous de décider.
 
 <!--
 Durée : 30 à 40 min
-OPTIONNEL — variable d'ajustement. Les exercices 1 et 2 suffisent si le temps manque. Le 3 est réutilisé pour les tests JUnit (§5.8).
+OPTIONNEL — variable d'ajustement. Les exercices 1 et 2 suffisent si le temps manque. L'atelier 5 ne dépend pas de l'exercice 3 : il donne son propre code.
 Question pour le panier vide : renvoyer 0 ou refuser ? (refuser : 0 serait un mensonge silencieux)
 -->
 
@@ -979,16 +1057,26 @@ Piège à signaler : parseLong est permissif ("+5", "007", "٣" sont acceptés).
 
 ## 🛠️ À vous — Partie 4 (25 à 35 min)
 
-1. `normalizePromoCode` : `"  promo10 "` devient `"PROMO10"`, puis on valide.
-2. `parseQuantity` avec `try` / `catch`… et le piège du chiffre `"٣"` 🔒
-3. Un **ticket complet** avec `StringBuilder`.
-4. 🔵 `"Crème brûlée"` : combien de caractères, combien d'octets ?
+1. `static String normalizePromoCode(String raw)` :
+   `"  promo10 "` → `"PROMO10"`, et `null` → `""`.
+2. `static int parseQuantity(String text)` : la quantité (1 à 20), ou `-1`.
+   `Integer.parseInt` dans un `try` / `catch`. Essayez `"3"`, `"abc"`, `"21"`, `null`…
+   🔒 et `"٣"` (copiez-le) : est-il accepté ? Est-ce normal ?
+3. Un ticket avec `StringBuilder` :
 
-<div class="support">📖 Support §4.8 — À vous</div>
+```text
+2 x Margherita = 25,00 €
+1 x Tiramisu = 6,50 €
+TOTAL = 31,50 €
+```
+
+4. 🔵 Affichez `"Crème brûlée".length()`, puis `"Crème brûlée".getBytes().length`. Pourquoi ?
 
 <!--
 Durée : 25 à 35 min
-OPTIONNEL — variable d'ajustement. L'exercice 2 est le plus important pour les profils cyber : Integer.parseInt accepte les chiffres Unicode, la liste blanche du §4.3 non.
+OPTIONNEL — variable d'ajustement. L'exercice 2 est le plus important pour les profils cyber : Integer.parseInt accepte les chiffres Unicode ("٣" donne 3), la liste blanche de isValidQuantity non.
+Exercice 3 : formatEuros vient de l'atelier 2 ; sinon, String.format("%d,%02d €", c / 100, c % 100) (slide StringBuilder).
+Exercice 4 : 12 caractères, 15 octets en UTF-8 (è, û, é font 2 octets chacun).
 L'exercice 4 prépare directement le TP (le protocole compte en octets).
 -->
 
@@ -1113,7 +1201,7 @@ class OrderCalculatorTest {
 <!--
 Durée : 3 min
 @Test : JUnit exécute cette méthode. assertEquals(attendu, obtenu) : l'ordre compte pour le message d'erreur.
-Démo live : mvn test (vert), puis casser totalCents (remplacer multiplyExact par addExact), relancer : expected: <2850> but was: <...>. Rouge. Réparer.
+Démo live : mvn test (vert), puis casser totalCents (remplacer la multiplication par une addition), relancer : expected: <2850> but was: <...>. Rouge. Réparer.
 Message : le test appelle OrderCalculator.totalCents : il faut une classe NOMMÉE (retour à la partie 1).
 Dans le projet, le fichier commence par package fr.foodfast; (coupé ici pour la place).
 -->
@@ -1147,18 +1235,50 @@ Bonus dans le support : @ParameterizedTest pour tester 10 entrées en un seul te
 
 ## 🛠️ À vous — Partie 5 (30 à 40 min)
 
-1. Un projet **Maven** dans IntelliJ, `BasketStats` dans `src/main/java`.
-2. **Trois tests** : un cas nominal, un cas limite, une entrée invalide.
-3. Lancer `mvn test` **et** ▶▶ dans IntelliJ.
-4. **Casser exprès** (`>` devient `>=`) : lire `expected` / `but was`.
+<div class="cols"><div>
 
-> C'est exactement ainsi que commence le TP.
+**1.** Dans le projet Maven d'IntelliJ, `src/main/java/BasketStats.java` :
 
-<div class="support">📖 Support §5.8 — À vous</div>
+```java
+public class BasketStats {
+  static int countAbove(int[] prices,
+                        int threshold) {
+    int count = 0;
+    for (int p : prices) {
+      if (p > threshold) {
+        count++;
+      }
+    }
+    return count;
+  }
+}
+```
+
+</div><div>
+
+**2.** Curseur sur `BasketStats`, **Alt+Entrée** → *Create Test* (JUnit 5, bouton *Fix* si proposé).
+
+```java
+@Test
+void prix_egal_au_seuil_non_compte() {
+  int[] prices = {1250, 1000, 450};
+  assertEquals(1,
+      BasketStats.countAbove(prices, 1000));
+}
+```
+
+**3.** ▶▶ dans IntelliJ, puis `mvn test`.
+**4.** Cassez : `>` devient `>=`. Lisez `expected` / `but was`.
+**5.** Deux tests à vous.
+
+</div></div>
 
 <!--
 Durée : 30 à 40 min
 OPTIONNEL — variable d'ajustement. Le plus utile des ateliers : à faire en priorité si un seul atelier est possible, éventuellement en début de TP.
+Tout le code est sur la slide. Ceux qui ont fait BasketStats à l'atelier 3 testent leur propre classe.
+Create Test : si JUnit manque, IntelliJ propose Fix, qui l'ajoute au pom.xml. Sinon, ajouter le bloc <dependency> de la slide pom.xml (2/2), puis Load Maven Changes.
+Imports du test : import org.junit.jupiter.api.Test; et import static org.junit.jupiter.api.Assertions.assertEquals; (Alt+Entrée les ajoute).
 Vérifier que chacun voit BUILD SUCCESS en terminal : c'est la preuve que Java 25 + Maven + JUnit fonctionnent.
 -->
 
@@ -1215,7 +1335,7 @@ Le choix se fait aujourd'hui, pour les 4 séances.
 Durée : 2 min
 Présentation des deux sujets : tp/README.md.
 Insister : ShortLink n'est pas « le TP facile mal noté ». Même grille, mêmes notions, et ses 🔵 / 🟣 occupent les rapides. Un TP fini et compris vaut mieux qu'un Mini-Redis à moitié fait.
-Ne pas laisser un débutant partir sur Mini-Redis par fierté : lui proposer de commencer ShortLink, et de regarder Mini-Redis s'il finit le 🟢 en avance.
+Ne pas laisser un débutant partir sur Mini-Redis par fierté : le choix est définitif, et les 🔵 🟣 de ShortLink occuperont ceux qui vont vite.
 -->
 
 ---
@@ -1225,9 +1345,9 @@ Ne pas laisser un débutant partir sur Mini-Redis par fierté : lui proposer de 
 Aujourd'hui, vous réutiliserez :
 
 - `switch` en expression sur une `String`, méthodes `static`
-- `List` et `Map` (§3.8), `String` et `StringBuilder`
-- valider une entrée par liste blanche 🔒 (§4.3)
-- `Math.addExact` contre le débordement 🔒 (§2.6)
+- `List` et `Map`, `String` et `StringBuilder`
+- valider une entrée par liste blanche 🔒
+- `Math.addExact` contre le débordement 🔒
 - JUnit : un test par comportement, sans oublier les entrées invalides
 
 > Lisez les tests fournis : ils sont la spécification. Pour Mini-Redis, la spécification, c'est le vrai serveur : **« faites comme Valkey »**.

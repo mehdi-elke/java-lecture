@@ -234,7 +234,7 @@ IO.println(isPending.test(cheapest)); // true
 <!--
 Durée : 2 min
 Message : ces objets se passent en paramètre. List.sort, que vous connaissez, attend un Comparator : avant Java 8, il fallait une classe anonyme.
-Démo possible : jshell, créer un Predicate et appeler test.
+Démo possible : dans un void main(), créer un Predicate et appeler test.
 -->
 
 ---
@@ -523,7 +523,7 @@ IO.println(s.toList());
 <!--
 Durée : 2 min
 Question à la salle : quelle est la première ligne affichée ?
-Démo : exécuter dans jshell après le vote, puis ajouter un deuxième s.toList() pour montrer l'IllegalStateException.
+Démo : exécuter dans un void main() après le vote, puis ajouter un deuxième s.toList() pour montrer l'IllegalStateException.
 -->
 
 ---

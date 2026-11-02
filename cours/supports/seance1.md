@@ -175,7 +175,7 @@ Corrigez (`int i = 0`), relancez : `Total : 2500 centimes`.
 
 Sur un Mac, les touches F7 et F8 demandent souvent la touche `fn`.
 
-> 🔵 **Évaluer une expression.** Pendant que le programme est arrêté, *Evaluate Expression* (Alt+F8) vous laisse taper n'importe quelle expression Java, par exemple `pricesCents[0] + pricesCents[1]`, et affiche le résultat. C'est jshell, mais au milieu de votre programme.
+> 🔵 **Évaluer une expression.** Pendant que le programme est arrêté, *Evaluate Expression* (Alt+F8) vous laisse taper n'importe quelle expression Java, par exemple `pricesCents[0] + pricesCents[1]`, et affiche le résultat. Pratique pour vérifier une intuition sans relancer le programme.
 
 ### 0.5 🛠️ Les raccourcis IntelliJ qui changent la vie
 
@@ -217,7 +217,6 @@ La JVM gère aussi la mémoire. Les objets que vous créez sont placés dans une
 |---|---|
 | `javac` | compile les `.java` en `.class` |
 | `java` | lance la JVM ; sait aussi exécuter directement un fichier `.java` |
-| `jshell` | console interactive pour tester une ligne de Java (§1.5) |
 | `jar` | regroupe des `.class` dans une archive `.jar` |
 | `javadoc` | génère la documentation HTML à partir des commentaires |
 | `javap` | affiche le bytecode d'un `.class` (`javap -c Hello`) |
@@ -389,20 +388,20 @@ Dans ce support, les petits exemples sont des *compact source files*, plus lisib
 
 **Une règle pour tout ce support.** Nos méthodes utilitaires sont toujours déclarées `static`, y compris dans les *compact source files* (où ce n'est pas obligatoire). Ainsi, vous pouvez les copier telles quelles dans une classe nommée, et les appeler depuis un `public static void main` ou depuis un test.
 
-### 1.5 🔵 jshell : tester une ligne de Java
+### 1.5 🔵 Un fichier brouillon pour tester une idée
 
-`jshell` est une console interactive livrée avec le JDK. Elle évalue chaque ligne immédiatement, sans fichier ni `main`. C'est l'outil idéal pour vérifier une intuition (« que vaut `7 / 2` ? »).
+Pour vérifier une intuition (« que vaut `7 / 2` ? »), gardez un fichier brouillon : un *compact source file* que vous modifiez et relancez à volonté, avec ▶ dans IntelliJ ou `java Brouillon.java` dans un terminal (sans `javac`).
 
-```text
-$ jshell
-jshell> 7 / 2
-$1 ==> 3
-jshell> "promo10".toUpperCase()
-$2 ==> "PROMO10"
-jshell> Math.multiplyExact(1250, 2_000_000)
-|  Exception java.lang.ArithmeticException: integer overflow
-jshell> /exit
+```java
+// Fichier : Brouillon.java
+void main() {
+    IO.println(7 / 2);                      // 3
+    IO.println("promo10".toUpperCase());    // PROMO10
+    IO.println(Integer.MAX_VALUE + 1);      // -2147483648
+}
 ```
+
+Une ligne qui lève une exception arrête le programme : placez-la en dernier, ou commentez-la après l'avoir vue.
 
 ### 1.6 🛠️ À vous
 
@@ -447,22 +446,36 @@ Hello.java:2: error: unclosed string literal
 
 </details>
 
-**Exercice 2 — La même chose dans IntelliJ, avec des arguments** (⏱️ 10 min)
+**Exercice 2 — La même chose dans IntelliJ** (⏱️ 8 min)
 
-Dans le projet créé au §0.3, ajoutez une classe `Welcome` (forme classique, §1.3) qui affiche `Bienvenue chez <restaurant> !`. Le nom du restaurant est le premier argument du programme. Sans argument, le programme affiche `Bienvenue chez FoodFast !`.
+Dans le projet créé au §0.3, créez une classe `FoodFastApp` : clic droit sur `src/main/java` → *New* → *Java Class*. Recopiez le programme du §1.3.
+
+1. Lancez-la avec le ▶ vert dans la marge, à côté de `main`. La sortie s'affiche en bas, dans la fenêtre *Run*.
+2. Changez le message, relancez.
+3. Supprimez un `;`. IntelliJ souligne l'erreur en rouge **avant même de compiler**. Survolez-la : c'est le même message que `javac`.
+
+**Exercice 3 🔵 — Regarder le bytecode** (⏱️ 5 min)
+
+Après `javac Hello.java`, lancez `javap -c Hello`. Retrouvez dans la sortie la chaîne `"Bienvenue chez FoodFast !"` et l'appel à `println`. Vous lisez ce que la JVM exécute réellement.
+
+**Exercice 4 🔵 — Accueillir le restaurant passé en argument** (⏱️ 10 min)
+
+Le `String[] args` de `main` contient les mots tapés après le nom du programme : `java FoodFastApp "Chez Mario"` donne `args[0]` égal à `"Chez Mario"`. Cet exercice utilise un tableau et un `if`, vus en partie 3 : à garder pour plus tard si c'est nouveau pour vous.
+
+Modifiez `FoodFastApp` : elle affiche `Bienvenue chez <restaurant> !`, où le restaurant est le premier argument. Sans argument, elle affiche `Bienvenue chez FoodFast !`.
 
 1. Lancez-la avec ▶ : vous devez voir `Bienvenue chez FoodFast !`.
 2. Passez un argument : menu *Run* → *Edit Configurations…* → champ *Program arguments* : `"Chez Mario"` (avec les guillemets, sinon ce sont deux arguments). Relancez.
 3. Que se passe-t-il si vous lisez `args[0]` sans vérifier qu'il existe, et sans argument ?
 
-**Indice.** `args` est un tableau de `String` ; `args.length` donne le nombre d'arguments.
+**Indice.** `args.length` donne le nombre d'arguments.
 
 <details>
-<summary>Solution de l'exercice 2</summary>
+<summary>Solution de l'exercice 4</summary>
 
 ```java
-// Fichier : Welcome.java
-public class Welcome {
+// Fichier : FoodFastApp.java
+public class FoodFastApp {
     public static void main(String[] args) {
         String restaurant = "FoodFast";
         if (args.length > 0) {
@@ -476,10 +489,6 @@ public class Welcome {
 3. Sans la vérification, `args[0]` lève une `ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0` : le tableau est vide. C'est le premier réflexe de robustesse : **ne jamais supposer qu'une entrée existe**.
 
 </details>
-
-**Exercice 3 🔵 — Regarder le bytecode** (⏱️ 5 min)
-
-Après `javac Hello.java`, lancez `javap -c Hello`. Retrouvez dans la sortie la chaîne `"Bienvenue chez FoodFast !"` et l'appel à `println`. Vous lisez ce que la JVM exécute réellement.
 
 ---
 
@@ -846,20 +855,23 @@ Une constante nommée vaut mieux qu'un « nombre magique » : `quantity <= MAX_Q
 
 > ⏱️ 20 à 30 min, sur votre machine.
 
-**Exercice 1 — Prédire, puis vérifier dans jshell** (⏱️ 8 min)
+**Exercice 1 — Prédire, puis vérifier** (⏱️ 8 min)
 
-Écrivez d'abord sur papier ce que vaut chaque expression. Lancez ensuite `jshell` et tapez-les une par une.
+Écrivez d'abord sur papier ce qu'affiche chaque ligne. Lancez ensuite le programme.
 
-```text
-7 / 2
-7 / 2.0
-7 % 3
-"Total : " + 1 + 2
-1 + 2 + " €"
-Integer.MAX_VALUE + 1
-0.1 + 0.2
-"PROMO" == new String("PROMO")
-"PROMO".equals(new String("PROMO"))
+```java
+// Fichier : Predict.java
+void main() {
+    IO.println(7 / 2);
+    IO.println(7 / 2.0);
+    IO.println(7 % 3);
+    IO.println("Total : " + 1 + 2);
+    IO.println(1 + 2 + " €");
+    IO.println(Integer.MAX_VALUE + 1);
+    IO.println(0.1 + 0.2);
+    IO.println("PROMO" == new String("PROMO"));
+    IO.println("PROMO".equals(new String("PROMO")));
+}
 ```
 
 <details>
@@ -2077,7 +2089,7 @@ void main() {
 
 **Exercice 4 🔵 — Caractères ou octets ?** (⏱️ 3 min)
 
-Dans jshell, prédisez puis vérifiez : `"Crème brûlée".length()` et `"Crème brûlée".getBytes(java.nio.charset.StandardCharsets.UTF_8).length`.
+Dans un *compact source file*, prédisez puis affichez : `"Crème brûlée".length()` et `"Crème brûlée".getBytes(java.nio.charset.StandardCharsets.UTF_8).length`.
 
 <details>
 <summary>Solution de l'exercice 4</summary>
@@ -2469,7 +2481,7 @@ class OrderCalculatorErrorTest {
 
 1. Reprenez le projet IntelliJ du §0.3 (ou créez-en un : *New Project*, build system **Maven**, JDK 25).
 2. Remplacez le contenu du `pom.xml` par celui du §5.3, en gardant votre `groupId` et votre `artifactId`. Cliquez sur l'icône Maven qui apparaît en haut à droite de l'éditeur (*Load Maven Changes*) pour qu'IntelliJ relise le fichier.
-3. Copiez `BasketStats` (exercice 3 du §3.9) dans `src/main/java`.
+3. Copiez `BasketStats` (exercice 3 du §3.9) dans `src/main/java`. Vous ne l'avez pas fait ? Commencez avec la seule méthode `countAbove`, donnée sur la slide « À vous — Partie 5 », et ne gardez que le test du cas limite.
 4. Dans `src/test/java`, créez `BasketStatsTest` avec trois tests :
    - un cas nominal : le maximum de `{1250, 450, 800, 1590}` vaut `1590` ;
    - un cas limite : `countAbove` avec un prix **égal** au seuil ne le compte pas ;
@@ -2674,28 +2686,30 @@ Vous avez appris Java il y a quelques années, ou vous travaillez sur un projet 
 
 Ces manipulations ne sont pas nécessaires pour le TP. Elles expliquent des comportements qui surprennent même des développeurs expérimentés.
 
-**1. Le cache des `Integer`.** Dans jshell :
+**1. Le cache des `Integer`.**
 
-```text
-jshell> Integer a = 127, b = 127;
-jshell> a == b
-$3 ==> true
-jshell> Integer c = 128, d = 128;
-jshell> c == d
-$6 ==> false
+```java
+// Fichier : IntegerCache.java
+void main() {
+    Integer a = 127, b = 127;
+    IO.println(a == b);       // true
+    Integer c = 128, d = 128;
+    IO.println(c == d);       // false
+}
 ```
 
 `Integer` est une **classe** (le type « emballé » de `int`). `==` compare donc des **références**, comme pour les `String`. Java garde en cache les objets `Integer` de -128 à 127 : `a` et `b` désignent le même objet, `c` et `d` deux objets différents. Morale : `equals` pour comparer des `Integer`, toujours. Ce bug passe tous les tests avec de petites valeurs, puis apparaît en production.
 
-**2. Le *string pool*.** Toujours dans jshell :
+**2. Le *string pool*.**
 
-```text
-jshell> String s1 = "PROMO10";
-jshell> String s2 = new String("PROMO10");
-jshell> s1 == s2
-$9 ==> false
-jshell> s1 == s2.intern()
-$10 ==> true
+```java
+// Fichier : StringPool.java
+void main() {
+    String s1 = "PROMO10";
+    String s2 = new String("PROMO10");
+    IO.println(s1 == s2);            // false
+    IO.println(s1 == s2.intern());   // true
+}
 ```
 
 Les littéraux identiques sont partagés dans un *pool*. `intern()` renvoie l'exemplaire du pool. C'est pourquoi `==` sur des `String` « marche parfois » (§2.5) : un piège, pas une fonctionnalité.

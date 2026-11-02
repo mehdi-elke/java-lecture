@@ -359,7 +359,7 @@ Que s'affiche-t-il ?
 <!--
 Durée : 1 min
 Question à la salle : votez à main levée. 0.3 / true ? autre chose ?
-Démo : taper l'exemple dans jshell AVANT de passer à la slide suivante.
+Démo : lancer l'exemple dans un void main() AVANT de passer à la slide suivante.
 -->
 
 ---
