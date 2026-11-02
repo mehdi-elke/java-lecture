@@ -31,16 +31,16 @@ Au fil des séances, ShortLink devient une vraie application :
 
 Les énoncés des séances 2 à 4 arrivent avant chaque séance.
 
-## ShortLink ou Mini-Redis ?
+## Et Mini-Redis ?
 
-Les deux TP couvrent **les mêmes notions** et sont **évalués de la même façon**. Ils diffèrent par la manière de travailler :
+ShortLink est le TP du module. Mini-Redis est un **parcours autonome 🟣**, pour ceux qui ont déjà de l'expérience. Les deux couvrent **les mêmes notions** et sont **évalués de la même façon**. Ils diffèrent par la manière de travailler :
 
 | | ShortLink | Mini-Redis |
 |---|---|---|
 | Ce qu'on vise | faire passer des tests fournis | se comporter exactement comme un vrai serveur (Valkey) |
 | Guidage | pas à pas, avec le début du code à chaque exercice | des objectifs, à vous de trouver comment |
-| Installation | Java et Maven, rien d'autre | Java, Maven, et Docker (ou Valkey) conseillé |
-| Pour qui | vous découvrez Java, ou la programmation vous demande encore des efforts | vous programmez déjà à l'aise et voulez un défi |
+| Installation | Java et Maven | Java et Maven (Docker facultatif) |
+| Pour qui | tout le monde | vous programmez déjà à l'aise et voulez chercher seuls |
 
 Vous ne savez pas lequel choisir ? Prenez ShortLink. Un TP terminé et bien compris vaut mieux qu'un TP ambitieux à moitié fait. Le choix se fait en séance 1, et il est définitif.
 

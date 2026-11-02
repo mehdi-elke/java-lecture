@@ -31,7 +31,7 @@ Le support détaillé (plus complet que les slides, avec les solutions) est part
 | 4 | Plusieurs clients, SQL et sécurité 🔒 |
 
 Chaque séance : **cours court** entrecoupé d'**ateliers** 🛠️ sur votre machine, puis **TP en classe**.
-Le TP, fil rouge des 4 séances, **au choix** : un raccourcisseur de liens guidé pas à pas, ou votre propre serveur compatible Redis.
+Le TP, fil rouge des 4 séances : **ShortLink**, un raccourcisseur de liens guidé pas à pas.
 
 <!--
 Durée : 1 min (présentation personnelle comprise)
@@ -55,7 +55,7 @@ Se présenter en une phrase : parcours, ce qu'on fait au quotidien avec Java.
 
 <!--
 Durée : 2 min
-Même grille pour les deux sujets de TP. Poids proposés (prive/tp-miniredis/README.md §5, à valider avant d'annoncer des chiffres) : rendu S1 5 %, vérification S2 10 %, QCM 3 × 10 %, jalon S2 20 %, jalon S4 25 %, oral S4 10 %.
+Même grille pour ShortLink et le parcours autonome Mini-Redis. Poids proposés (prive/tp-miniredis/README.md §5, à valider avant d'annoncer des chiffres) : rendu S1 5 %, vérification S2 10 %, QCM 3 × 10 %, jalon S2 20 %, jalon S4 25 %, oral S4 10 %.
 Message : le code rendu compte peu en lui-même. Ce qui compte, c'est ce que vous savez en faire devant moi.
 -->
 
@@ -1326,23 +1326,21 @@ Les étudiants avancés : attaquez les défis pendant que les autres terminent l
 
 ---
 
-## Le TP : deux sujets au choix
+## Le TP : ShortLink 🔗
 
-| | 🔗 ShortLink | 🗄️ Mini-Redis |
-|---|---|---|
-| Le projet | un raccourcisseur de liens | un serveur compatible Redis |
-| On vise | faire passer des tests fournis | répondre exactement comme Valkey |
-| Guidage | pas à pas | des objectifs |
-| Installation | Java et Maven | Java et Maven |
+Un **raccourcisseur de liens**, comme bit.ly, construit sur les 4 séances :
+console et règles de validation aujourd'hui, objets en S2, fichiers et streams en S3, serveur web, concurrence et SQL en S4.
 
-**Mêmes notions, même évaluation.** Vous hésitez ? **ShortLink.**
-Le choix se fait aujourd'hui, pour les 4 séances.
+- Chaque comportement attendu est décrit par un **test fourni** : vous les activez un par un.
+- 🔵 🟣 pour aller plus loin, 🔒 pour la sécurité.
+
+**🟣 Parcours autonome, pour les expérimentés** : **Mini-Redis**, un serveur compatible Redis, sans guidage pas à pas. Vous avancez seuls avec ses outils ; même évaluation.
 
 <!--
 Durée : 2 min
-Présentation des deux sujets : tp/README.md.
-Insister : ShortLink n'est pas « le TP facile mal noté ». Même grille, mêmes notions, et ses 🔵 / 🟣 occupent les rapides. Un TP fini et compris vaut mieux qu'un Mini-Redis à moitié fait.
-Ne pas laisser un débutant partir sur Mini-Redis par fierté : le choix est définitif, et les 🔵 🟣 de ShortLink occuperont ceux qui vont vite.
+ShortLink est le TP de tout le monde. Mini-Redis : seulement pour ceux qui ont déjà de l'expérience et veulent chercher seuls. Le dire clairement : « je vous aide en priorité sur ShortLink ; sur Mini-Redis, vous avancez avec Compare et la spécification ». Le choix est définitif.
+Ne pas laisser un débutant partir sur Mini-Redis par fierté. Un avancé qui reste sur ShortLink peut travailler « à l'aveugle » : écrire ses propres tests à partir de la Javadoc avant de retirer les @Disabled.
+Présentation : tp/README.md. Faire le point en S2 : si personne n'a pris Mini-Redis, il disparaît.
 -->
 
 ---
@@ -1357,11 +1355,11 @@ Aujourd'hui, vous réutiliserez :
 - `Math.addExact` contre le débordement 🔒
 - JUnit : un test par comportement, sans oublier les entrées invalides
 
-> Lisez les tests fournis : ils sont la spécification. Pour Mini-Redis, la spécification, c'est le vrai serveur : **« faites comme Valkey »**.
+> Lisez les tests fournis : ils sont la spécification.
 
 <!--
 Durée : 1 min
-Transition vers le TP. ShortLink : la console et le modèle de commande (add) sont fournis. Mini-Redis : le code réseau et le protocole sont fournis. Dans les deux cas, on écrit les commandes.
+Transition vers le TP. ShortLink : la console et le modèle de commande (add) sont fournis, on écrit les règles et les commandes. (Mini-Redis : la spécification, c'est le vrai serveur, « faites comme Valkey ».)
 -->
 
 ---
@@ -1369,18 +1367,16 @@ Transition vers le TP. ShortLink : la console et le modèle de commande (add) so
 ## 🛠️ TP — Prise en main (25 min)
 
 1. **Récupérer** : [github.com/mehdi-elke/java-lecture](https://github.com/mehdi-elke/java-lecture) → *Code* → *Download ZIP*.
-   Copiez `tp/shortlink/starter` **ou** `tp/miniredis/starter` où vous voulez.
-2. **L'ouvrir dans IntelliJ**, puis `mvn test` : `BUILD SUCCESS`.
-3. **Suivre le §0 de l'énoncé** : `tp/<sujet>/enonce/seance1.md`.
+   Copiez `tp/shortlink/starter` où vous voulez, renommez-le `shortlink`.
+2. **L'ouvrir dans IntelliJ**, puis `mvn test` : `BUILD SUCCESS`, avec 40 tests *skipped* (normal).
+3. **Suivre le §0 de l'énoncé** : `tp/shortlink/enonce/seance1.md`.
 
-**Mini-Redis seulement** : ▶ sur `Server.main`, puis dans le terminal :
-`java tools/Cli.java` (parler au serveur, `quit` pour sortir)
-`java tools/Compare.java tests/s1.txt` (se comparer à Valkey)
+🟣 **Parcours autonome Mini-Redis** : `tp/miniredis/starter`, énoncé `tp/miniredis/enonce/seance1.md`.
 
 <!--
 Durée : 25 min
 ShortLink : mvn test doit afficher 41 tests, 40 skipped. Les « skipped » sont normaux : chaque exercice commence par supprimer un @Disabled.
-Mini-Redis : pas de Docker. Compare lit les réponses de Valkey enregistrées (tests/s1.expected) : le message « Valkey non utilisé » est normal. Piège fréquent : Cli encore ouvert pendant Compare. Le serveur ne sert qu'un client à la fois, Compare affiche « pas de réponse après 3 s ». Faire quitter Cli. Docker reste une option (présentation du TP, « Option : le vrai Valkey »).
+Mini-Redis (autonomes) : pas de Docker. Compare lit les réponses de Valkey enregistrées (tests/s1.expected) : le message « Valkey non utilisé » est normal. Piège fréquent : Cli encore ouvert pendant Compare. Le serveur ne sert qu'un client à la fois, Compare affiche « pas de réponse après 3 s ». Faire quitter Cli. Docker reste une option (présentation du TP, « Option : le vrai Valkey »).
 Les rapides enchaînent sur le §1 sans attendre.
 -->
 

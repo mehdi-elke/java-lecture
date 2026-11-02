@@ -164,7 +164,7 @@ Il n'y a aucune note : c'est pour savoir avant la séance qui a besoin d'aide.
 
 ## Facultatif : si tout fonctionne et que vous voulez prendre de l'avance
 
-Le TP propose deux sujets au choix, présentés en séance 1 : un raccourcisseur de liens (ShortLink) ou votre propre serveur compatible Redis (Mini-Redis). Les deux ne demandent que Java et Maven. Pour Mini-Redis, Docker permet en option de lancer le vrai serveur Valkey et de comparer : si vous le souhaitez, installez [Docker Desktop](https://www.docker.com/products/docker-desktop/), puis vérifiez dans un terminal :
+Le TP, présenté en séance 1, est un raccourcisseur de liens (ShortLink). Un parcours autonome, votre propre serveur compatible Redis (Mini-Redis), est proposé aux étudiants expérimentés. Les deux ne demandent que Java et Maven. Pour Mini-Redis, Docker permet en option de lancer le vrai serveur Valkey et de comparer : si vous le souhaitez, installez [Docker Desktop](https://www.docker.com/products/docker-desktop/), puis vérifiez dans un terminal :
 
 ```text
 docker run --rm hello-world

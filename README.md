@@ -28,9 +28,9 @@ Le markdown est toujours la version la plus à jour ; les PDF sont régénérés
 │   ├── slides/           # Slides en PDF
 │   └── supports/         # Supports détaillés en PDF
 ├── tp/
-│   ├── README.md         # Choisir son sujet de TP
-│   ├── miniredis/        # Sujet 1 : un mini-Redis
-│   └── shortlink/        # Sujet 2 : un raccourcisseur de liens, guidé
+│   ├── README.md         # Le TP, et le parcours autonome
+│   ├── shortlink/        # Le TP : un raccourcisseur de liens, guidé
+│   └── miniredis/        # Parcours autonome : un mini-Redis
 ├── tools/                # Vérification et génération des supports (Node.js)
 └── build_support.sh
 ```
@@ -39,13 +39,13 @@ Deux supports par séance :
 * **Slides** (`cours/slides/`) : ce qui est projeté en cours, volontairement léger.
 * **Support détaillé** (`cours/supports/`) : les explications complètes, le code complet et les approfondissements.
 
-## Le TP : deux sujets au choix
+## Le TP
 
-Choisissez votre sujet avec [`tp/README.md`](tp/README.md).
+Tout est expliqué dans [`tp/README.md`](tp/README.md).
 
-**ShortLink** (`tp/shortlink/`) : un raccourcisseur de liens, guidé pas à pas, pour celles et ceux qui découvrent la programmation. Chaque comportement attendu est décrit par un test fourni. Prérequis : JDK 25 et Maven.
+**ShortLink** (`tp/shortlink/`), le TP du module : un raccourcisseur de liens, guidé pas à pas. Chaque comportement attendu est décrit par un test fourni. Prérequis : JDK 25 et Maven.
 
-**Mini-Redis** (`tp/miniredis/`) : vous écrivez en Java un serveur clé-valeur compatible avec le vrai client `valkey-cli`. La règle est simple : votre serveur doit répondre **exactement comme Valkey**. L'outil `tools/Compare.java` envoie les mêmes commandes aux deux serveurs et affiche les différences. Prérequis : JDK 25, Maven, et Docker pour lancer le Valkey de référence.
+**Mini-Redis** (`tp/miniredis/`), parcours autonome 🟣 pour les expérimentés : vous écrivez en Java un serveur clé-valeur compatible avec le vrai client `valkey-cli`. La règle est simple : votre serveur doit répondre **exactement comme Valkey**. L'outil `tools/Compare.java` compare ses réponses à celles de Valkey et affiche les différences. Prérequis : JDK 25 et Maven (Docker facultatif).
 
 ## Générer les supports
 
