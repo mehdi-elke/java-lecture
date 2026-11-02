@@ -1,0 +1,112 @@
+A SUBSCRIBE actu météo
+=> A ["subscribe", "actu", (integer) 1]
+=> A ["subscribe", "météo", (integer) 2]
+B PUBLISH actu "bonjour à tous"
+=> B (integer) 1
+=> A ["message", "actu", "bonjour à tous"]
+B PUBLISH météo "pluie\r\n+OK"
+=> B (integer) 1
+=> A ["message", "météo", "pluie\r\n+OK"]
+B PUBLISH sport but
+=> B (integer) 0
+A SUBSCRIBE actu
+=> A ["subscribe", "actu", (integer) 2]
+A UNSUBSCRIBE inconnu
+=> A ["unsubscribe", "inconnu", (integer) 2]
+A UNSUBSCRIBE actu
+=> A ["unsubscribe", "actu", (integer) 1]
+B PUBLISH actu "plus personne"
+=> B (integer) 0
+A UNSUBSCRIBE
+=> A ["unsubscribe", "météo", (integer) 0]
+A UNSUBSCRIBE
+=> A ["unsubscribe", (nil), (integer) 0]
+C SUBSCRIBE commandes
+=> C ["subscribe", "commandes", (integer) 1]
+C GET plat
+=> C (error) ERR Can't execute 'get': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context
+C SET plat pizza
+=> C (error) ERR Can't execute 'set': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context
+C PUBLISH commandes x
+=> C (error) ERR Can't execute 'publish': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context
+C PING
+=> C ["pong", ""]
+C PING coucou
+=> C ["pong", "coucou"]
+C UNSUBSCRIBE commandes
+=> C ["unsubscribe", "commandes", (integer) 0]
+C SET plat pizza
+=> C OK
+C GET plat
+=> C "pizza"
+C PING
+=> C PONG
+B SUBSCRIBE
+=> B (error) ERR wrong number of arguments for 'subscribe' command
+B PUBLISH
+=> B (error) ERR wrong number of arguments for 'publish' command
+B PUBLISH actu
+=> B (error) ERR wrong number of arguments for 'publish' command
+B PUBLISH actu a b
+=> B (error) ERR wrong number of arguments for 'publish' command
+B UNSUBSCRIBE
+=> B ["unsubscribe", (nil), (integer) 0]
+A SUBSCRIBE Actu
+=> A ["subscribe", "Actu", (integer) 1]
+B PUBLISH actu minuscules
+=> B (integer) 0
+B PUBLISH Actu Majuscule
+=> B (integer) 1
+=> A ["message", "Actu", "Majuscule"]
+C SUBSCRIBE Actu
+=> C ["subscribe", "Actu", (integer) 1]
+B PUBLISH Actu "pour deux"
+=> B (integer) 2
+=> A ["message", "Actu", "pour deux"]
+=> C ["message", "Actu", "pour deux"]
+A !close
+B PUBLISH Actu "pour un"
+=> B (integer) 1
+=> C ["message", "Actu", "pour un"]
+C !close
+B PUBLISH Actu "pour personne"
+=> B (integer) 0
+D PSUBSCRIBE "commande:*"
+=> D ["psubscribe", "commande:*", (integer) 1]
+B PUBLISH commande:42 prête
+=> B (integer) 1
+=> D ["pmessage", "commande:*", "commande:42", "prête"]
+B PUBLISH livraison:42 partie
+=> B (integer) 0
+D SUBSCRIBE commande:7
+=> D ["subscribe", "commande:7", (integer) 2]
+B PUBLISH commande:7 "message et pmessage"
+=> B (integer) 2
+=> D ["message", "commande:7", "message et pmessage"]
+=> D ["pmessage", "commande:*", "commande:7", "message et pmessage"]
+D PSUBSCRIBE "commande:[0-9]"
+=> D ["psubscribe", "commande:[0-9]", (integer) 3]
+D PUNSUBSCRIBE "commande:[0-9]"
+=> D ["punsubscribe", "commande:[0-9]", (integer) 2]
+D GET plat
+=> D (error) ERR Can't execute 'get': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context
+D PUNSUBSCRIBE
+=> D ["punsubscribe", "commande:*", (integer) 1]
+B PUBSUB CHANNELS
+=> B ["commande:7"]
+B PUBSUB CHANNELS "commande:*"
+=> B ["commande:7"]
+B PUBSUB NUMSUB commande:7 actu
+=> B ["commande:7", (integer) 1, "actu", (integer) 0]
+B PUBSUB NUMSUB
+=> B []
+B PUBSUB NUMPAT
+=> B (integer) 0
+D UNSUBSCRIBE
+=> D ["unsubscribe", "commande:7", (integer) 0]
+B PUBSUB CHANNELS
+=> B []
+B PUBSUB
+=> B (error) ERR wrong number of arguments for 'pubsub' command
+B PUBSUB FOO
+=> B (error) ERR unknown subcommand 'FOO'. Try PUBSUB HELP.

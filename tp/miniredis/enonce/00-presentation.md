@@ -49,8 +49,10 @@ Le projet `starter/` contient :
 | `tools/Compare.java` | Compare votre serveur au vrai Valkey |
 | `tools/Cli.java` | Un mini `valkey-cli`, pour parler à votre serveur sans rien installer |
 | `tools/LoadTest.java` | Met votre serveur à l'épreuve (séance 4) |
+| `tools/PubSubCompare.java` | Compare votre Pub/Sub à Valkey, avec plusieurs clients ([défi](defi-pubsub.md)) |
 | `tests/s1.txt` … `s4.txt` | Les commandes testées à chaque séance |
 | `tests/s1.expected` … `s4.expected` | Les réponses de Valkey à ces commandes, enregistrées |
+| `tests/pubsub.txt`, `pubsub.expected` | Le scénario du défi Pub/Sub, et les réponses de Valkey |
 
 Vous n'avez pas à écrire le protocole réseau. Lisez quand même `RespTest.java` : il montre les octets réellement échangés.
 
@@ -136,7 +138,7 @@ Chaque énoncé propose trois niveaux. Avancez à votre rythme.
 
 - 🟢 **Socle** : ce que tout le monde doit faire. C'est la base de la note.
 - 🔵 **Approfondissement** : pour aller plus loin, une fois le socle terminé.
-- 🟣 **Bonus** : pour ceux qui ont déjà de l'expérience.
+- 🟣 **Bonus** : pour ceux qui ont déjà de l'expérience. En plus des bonus de chaque séance, un **[défi long, Pub/Sub](defi-pubsub.md)** court sur les séances 2 à 4.
 - 🔒 **Sécurité** : les exercices de sécurité, marqués à chaque niveau.
 
 ## Les règles du jeu

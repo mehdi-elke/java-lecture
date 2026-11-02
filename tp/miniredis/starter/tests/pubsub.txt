@@ -1,0 +1,63 @@
+# Défi Pub/Sub — palier 2 : s'abonner, recevoir, se désabonner
+A SUBSCRIBE actu météo
+B PUBLISH actu "bonjour à tous"
+B PUBLISH météo "pluie\r\n+OK"
+B PUBLISH sport but
+A SUBSCRIBE actu
+A UNSUBSCRIBE inconnu
+A UNSUBSCRIBE actu
+B PUBLISH actu "plus personne"
+A UNSUBSCRIBE
+A UNSUBSCRIBE
+
+# Palier 2 : le mode abonné n'accepte que quelques commandes
+C SUBSCRIBE commandes
+C GET plat
+C SET plat pizza
+C PUBLISH commandes x
+C PING
+C PING coucou
+C UNSUBSCRIBE commandes
+C SET plat pizza
+C GET plat
+C PING
+
+# Palier 2 : arités et noms de canaux (sensibles à la casse)
+B SUBSCRIBE
+B PUBLISH
+B PUBLISH actu
+B PUBLISH actu a b
+B UNSUBSCRIBE
+A SUBSCRIBE Actu
+B PUBLISH actu minuscules
+B PUBLISH Actu Majuscule
+
+# Palier 3 : plusieurs abonnés, et un abonné qui s'en va
+C SUBSCRIBE Actu
+B PUBLISH Actu "pour deux"
+A !close
+B PUBLISH Actu "pour un"
+C !close
+B PUBLISH Actu "pour personne"
+
+# 🟣 PSUBSCRIBE : abonnement par motif (votre Glob de la séance 1)
+D PSUBSCRIBE "commande:*"
+B PUBLISH commande:42 prête
+B PUBLISH livraison:42 partie
+D SUBSCRIBE commande:7
+B PUBLISH commande:7 "message et pmessage"
+D PSUBSCRIBE "commande:[0-9]"
+D PUNSUBSCRIBE "commande:[0-9]"
+D GET plat
+D PUNSUBSCRIBE
+
+# 🟣 PUBSUB : qui écoute quoi ?
+B PUBSUB CHANNELS
+B PUBSUB CHANNELS "commande:*"
+B PUBSUB NUMSUB commande:7 actu
+B PUBSUB NUMSUB
+B PUBSUB NUMPAT
+D UNSUBSCRIBE
+B PUBSUB CHANNELS
+B PUBSUB
+B PUBSUB FOO

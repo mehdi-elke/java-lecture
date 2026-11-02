@@ -165,6 +165,10 @@ Attention : H2 enregistre l'utilisateur et le mot de passe **dans le fichier de 
   Être authentifié est un état **de la connexion**, pas du serveur : un client authentifié ne doit pas ouvrir la porte aux autres. Il ne peut donc pas vivre dans `CommandProcessor`, partagé par tous et dont `execute` ne change pas. Gérez `AUTH` dans `Server`, dans la boucle de **chaque** client : une variable locale `authenticated`, et `AUTH` traitée avant d'appeler `processor.execute`. La vérification du mot de passe, elle, mérite sa propre petite classe (par exemple `Authentication`), testable sans socket. Les réponses de Valkey sont dans la [spécification](specification.md).
 - **`CONFIG SET dir`.** C'est l'attaque historique des Redis exposés : l'attaquant change le dossier de sauvegarde, puis écrit un fichier où il veut (une clé SSH, une tâche cron). Implémentez `CONFIG GET dir` et `CONFIG GET dbfilename`, mais **refusez** `CONFIG SET dir` à l'exécution. Pour `CONFIG SET dbfilename`, n'acceptez qu'un nom de fichier simple, jamais un chemin (pas de `/`, pas de `..` : support S3, §5.5). Formats et messages : dans la spécification.
 
+## 🟣 Défi long : Pub/Sub
+
+Le [défi Pub/Sub](defi-pubsub.md) se termine. Cette séance : **paliers 3 et 4**, plusieurs clients, une socket partagée, et l'abonné lent 🔒. Vérification : `PubSubCompare` et `LoadTest pubsub`.
+
 ---
 
 ## Avant de partir (jalon 2)

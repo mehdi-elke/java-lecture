@@ -364,6 +364,78 @@ Ici, **le TP s'écarte de Valkey 8**, qui refuse aussi `CONFIG SET dbfilename` (
 
 ---
 
+## Défi Pub/Sub
+
+🟣 Le défi long ([énoncé](defi-pubsub.md)). Vérification : `java tools/PubSubCompare.java tests/pubsub.txt`, qui joue des scénarios à plusieurs clients ; chaque réponse relevée sur Valkey 8 est dans `tests/pubsub.expected`. Ci-dessous, `A>` et `B>` sont deux connexions, et `A<` ce que A reçoit sans l'avoir demandé.
+
+```text
+A> SUBSCRIBE actu météo           => ["subscribe", "actu", 1]
+                                     ["subscribe", "météo", 2]       une confirmation par canal ; 2 = abonnements de A
+B> PUBLISH actu "bonjour à tous"  => (integer) 1                    nombre de destinataires
+A<                                   ["message", "actu", "bonjour à tous"]
+B> PUBLISH sport but              => (integer) 0                    personne n'écoute : le message est perdu
+A> SUBSCRIBE actu                 => ["subscribe", "actu", 2]       déjà abonné : confirmé, rien ne change
+A> UNSUBSCRIBE inconnu            => ["unsubscribe", "inconnu", 2]  pas abonné : confirmé quand même
+A> UNSUBSCRIBE                    => ["unsubscribe", "actu", 1]
+                                     ["unsubscribe", "météo", 0]     sans argument : tous les canaux (ordre non garanti)
+A> UNSUBSCRIBE                    => ["unsubscribe", (nil), 0]      aucun canal à quitter
+```
+
+**Le mode abonné.** Tant qu'une connexion a au moins un abonnement (canal ou motif) :
+
+```text
+A> GET plat        => (error) ERR Can't execute 'get': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context
+A> PUBLISH x y     => (error) ERR Can't execute 'publish': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context
+A> PING            => ["pong", ""]
+A> PING coucou     => ["pong", "coucou"]
+```
+
+Le nom dans l'erreur est celui de la commande, en minuscules. Après le dernier `UNSUBSCRIBE`, la connexion redevient normale : `PING` répond de nouveau `PONG`.
+
+**Arités, casse, déconnexion.**
+
+```text
+SUBSCRIBE            => (error) ERR wrong number of arguments for 'subscribe' command
+PUBLISH              => (error) ERR wrong number of arguments for 'publish' command
+PUBLISH actu         => (error) ERR wrong number of arguments for 'publish' command
+PUBLISH actu a b     => (error) ERR wrong number of arguments for 'publish' command
+PUBLISH actu x       => (integer) 0       si seul « Actu » a un abonné : les canaux sont sensibles à la casse
+```
+
+Un abonné qui ferme sa connexion n'est plus compté par `PUBLISH`.
+
+**🟣 Motifs.** `PSUBSCRIBE` et `PUNSUBSCRIBE` suivent les mêmes règles, avec les motifs de `KEYS` (séance 1).
+
+```text
+D> PSUBSCRIBE "commande:*"           => ["psubscribe", "commande:*", 1]
+B> PUBLISH commande:42 prête         => (integer) 1
+D<                                      ["pmessage", "commande:*", "commande:42", "prête"]
+D> SUBSCRIBE commande:7              => ["subscribe", "commande:7", 2]      canaux et motifs comptent ensemble
+B> PUBLISH commande:7 x              => (integer) 2
+D<                                      ["message", "commande:7", "x"]       d'abord les canaux…
+D<                                      ["pmessage", "commande:*", "commande:7", "x"]   …puis les motifs
+```
+
+Si plusieurs motifs d'une connexion correspondent au même canal, elle reçoit un `pmessage` par motif, dans un ordre non garanti.
+
+**🟣 `PUBSUB`.**
+
+```text
+PUBSUB CHANNELS                 => ["commande:7"]          les canaux qui ont au moins un abonné (pas les motifs)
+PUBSUB CHANNELS "commande:*"    => ["commande:7"]          filtrés par un motif
+PUBSUB NUMSUB commande:7 actu   => ["commande:7", 1, "actu", 0]
+PUBSUB NUMSUB                   => []
+PUBSUB NUMPAT                   => (integer) 0             nombre de motifs différents écoutés
+PUBSUB                          => (error) ERR wrong number of arguments for 'pubsub' command
+PUBSUB FOO                      => (error) ERR unknown subcommand 'FOO'. Try PUBSUB HELP.
+PUBSUB CHANNELS a b             => (error) ERR unknown subcommand or wrong number of arguments for 'CHANNELS'. Try PUBSUB HELP.
+PUBSUB NUMPAT x                 => (error) ERR wrong number of arguments for 'pubsub|numpat' command
+```
+
+**🔒 Abonné lent.** Valkey déconnecte un abonné dont les messages en attente dépassent 32 Mo (`client-output-buffer-limit pubsub 32mb 8mb 60`). Une limite plus basse convient (8 Mo, par exemple). `LoadTest pubsub-slow` vérifie que l'éditeur n'est jamais bloqué et que l'abonné finit déconnecté.
+
+---
+
 ## Une réponse qui n'est pas ici ?
 
 1. Si vous avez Valkey : demandez-lui (`valkey-cli`).

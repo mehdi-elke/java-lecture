@@ -9,6 +9,8 @@
 // Chaque commande est envoyée en tableau RESP, encodée en UTF-8 : les accents et les
 // guillemets arrivent intacts (ce que nc ne fait pas : il envoie la ligne telle quelle).
 // Les réponses s'affichent comme dans valkey-cli. Pour quitter : quit, exit ou Ctrl+D.
+// Après SUBSCRIBE ou PSUBSCRIBE (défi Pub/Sub), le client affiche les messages au fil de l'eau,
+// sans limite de temps, jusqu'à Ctrl+C.
 
 import java.io.*;
 import java.net.Socket;
@@ -37,6 +39,7 @@ void main(String[] args) throws IOException {
 
         if (!oneShot.isEmpty()) {
             IO.println(execute(oneShot, in, out));
+            if (isSubscribe(oneShot)) listen(oneShot, socket, in);
             return;
         }
         String encoding = System.getProperty("stdin.encoding", System.getProperty("native.encoding"));
@@ -51,6 +54,7 @@ void main(String[] args) throws IOException {
             String name = command.getFirst().toLowerCase();
             if (name.equals("quit") || name.equals("exit")) break;
             IO.println(execute(command, in, out));
+            if (isSubscribe(command)) listen(command, socket, in);
         }
     } catch (java.net.ConnectException e) {
         IO.println("Impossible de se connecter à " + server + " : le serveur est-il lancé ?");
@@ -80,6 +84,31 @@ static String execute(List<String> command, InputStream in, OutputStream out) th
         IO.println("(connexion fermée par le serveur)");
         System.exit(1);
         return "";
+    }
+}
+
+static boolean isSubscribe(List<String> command) {
+    String name = command.getFirst().toUpperCase();
+    return (name.equals("SUBSCRIBE") || name.equals("PSUBSCRIBE")) && command.size() > 1;
+}
+
+/** Après SUBSCRIBE a b c : affiche les confirmations restantes, puis chaque message reçu, jusqu'à Ctrl+C. */
+static void listen(List<String> command, Socket socket, InputStream in) throws IOException {
+    try {
+        for (int i = 2; i < command.size(); i++) {
+            IO.println(readReply(in, ""));
+        }
+        IO.println("Lecture des messages... (Ctrl+C pour quitter)");
+        socket.setSoTimeout(0); // un abonné attend, parfois longtemps : plus de limite de 5 s
+        while (true) {
+            IO.println(readReply(in, ""));
+        }
+    } catch (java.net.SocketTimeoutException e) {
+        IO.println("(pas de confirmation après 5 s : SUBSCRIBE est-il écrit ?)");
+        System.exit(1);
+    } catch (EOFException e) {
+        IO.println("(connexion fermée par le serveur)");
+        System.exit(1);
     }
 }
 

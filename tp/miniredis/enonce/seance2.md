@@ -214,6 +214,10 @@ public final class SetValue implements Value {
 
 Ajoutez `SetValue` dans le `permits` de `Value`. Si vous avez écrit des `switch` sur `Value`, le compilateur vous montre maintenant chaque endroit à compléter : c'est l'intérêt de `sealed` (support S2, §5.7).
 
+## 🟣 Défi long : Pub/Sub
+
+Socle et approfondissement terminés ? Le [défi Pub/Sub](defi-pubsub.md) continue d'une séance à l'autre. Cette séance : **palier 1**, le registre des abonnements (interface, `Map`, `Set`, faux abonnés en JUnit).
+
 ---
 
 ## Avant de partir (jalon 1)

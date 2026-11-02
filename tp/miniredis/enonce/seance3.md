@@ -255,6 +255,10 @@ Command.of("PING", 0, 1, (args, store) -> args.isEmpty()
 
 C'est une lambda qui joue le rôle de `doExecute` (support S3, §1).
 
+## 🟣 Défi long : Pub/Sub
+
+Le [défi Pub/Sub](defi-pubsub.md) continue. Cette séance : **palier 2**, le mode abonné d'une connexion, testé sans réseau.
+
 ---
 
 ## Avant de partir
