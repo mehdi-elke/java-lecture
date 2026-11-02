@@ -164,10 +164,10 @@ Il n'y a aucune note : c'est pour savoir avant la séance qui a besoin d'aide.
 
 ## Facultatif : si tout fonctionne et que vous voulez prendre de l'avance
 
-Le TP de ce module consiste à écrire **votre propre serveur compatible Redis**. Pour comparer votre serveur au vrai, nous utiliserons **Docker**. Si vous le souhaitez, installez [Docker Desktop](https://www.docker.com/products/docker-desktop/), puis vérifiez dans un terminal :
+Le TP propose deux sujets au choix, présentés en séance 1 : un raccourcisseur de liens (ShortLink) ou votre propre serveur compatible Redis (Mini-Redis). Les deux ne demandent que Java et Maven. Pour Mini-Redis, Docker permet en option de lancer le vrai serveur Valkey et de comparer : si vous le souhaitez, installez [Docker Desktop](https://www.docker.com/products/docker-desktop/), puis vérifiez dans un terminal :
 
 ```text
 docker run --rm hello-world
 ```
 
-Le message `Hello from Docker!` confirme que Docker fonctionne. Ce n'est pas obligatoire avant la séance 1.
+Le message `Hello from Docker!` confirme que Docker fonctionne. Ce n'est pas obligatoire.

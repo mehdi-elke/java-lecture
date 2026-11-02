@@ -21,7 +21,7 @@ Redis et son fork libre Valkey servent de cache, de file de messages ou de base 
 
 Il n'y a pas de cahier des charges à interpréter. **La spécification, c'est le comportement du vrai Valkey.**
 
-Vous ne savez pas ce que doit répondre `INCR` sur une chaîne qui n'est pas un nombre ? Ne demandez pas à l'enseignant : demandez à Valkey.
+Vous ne savez pas ce que doit répondre `INCR` sur une chaîne qui n'est pas un nombre ? Ne demandez pas à l'enseignant : cherchez ce que répond Valkey.
 
 ```
 $ valkey-cli -p 6379
@@ -33,7 +33,7 @@ OK
 
 Votre serveur doit répondre **exactement** la même chose, au caractère près.
 
-Pas de Valkey sous la main, ou besoin d'une vue d'ensemble ? La [spécification écrite](specification.md) liste chaque commande, ses réponses et ses pièges, recopiés de Valkey.
+Inutile d'installer Valkey pour le savoir : la [spécification écrite](specification.md) liste chaque commande, ses réponses et ses pièges, recopiés de Valkey, et `tests/s1.expected` donne la réponse exacte de Valkey à chaque commande testée (la commande, `=>`, la réponse).
 
 ## Ce qui est fourni
 
@@ -70,47 +70,42 @@ Il vous faut :
 
 - **JDK 25** : `java -version` doit afficher `25`.
 - **Maven** : `mvn -v`. Les IDE (IntelliJ, VS Code) l'embarquent.
-- **Docker** : pour lancer le Valkey de référence et le client `valkey-cli`.
 
-Sans Docker, installez Valkey directement : `brew install valkey` sur macOS, `sudo apt install valkey` sur Linux si votre distribution le propose, ou dans WSL sous Windows. Lancez-le avec `valkey-server` : il écoute sur le port 6379, comme la version Docker. En attendant, vous n'êtes pas bloqués : `Compare` utilise les réponses enregistrées (voir plus bas), et la [spécification](specification.md) donne les réponses attendues.
+C'est tout : les réponses de Valkey sont enregistrées dans le projet (`tests/s1.expected` … `s4.expected`), et un client est fourni (`tools/Cli.java`). Le vrai Valkey est **facultatif** (voir « 🔵 Option : le vrai Valkey » plus bas).
 
-## Les quatre commandes à connaître
+## Les trois commandes à connaître
 
-**1. Lancer le Valkey de référence** (port 6379), une fois par séance :
+Lancez-les depuis le dossier de votre projet `miniredis`, par exemple dans le terminal d'IntelliJ (**View → Tool Windows → Terminal**, ou ⌥F12 / Alt+F12).
 
-```bash
-docker run -d --rm --name ref-valkey -p 6379:6379 valkey/valkey:8
-```
-
-**2. Lancer votre serveur** (port 6380) : bouton ▶ de l'IDE sur `Server.main`, ou
+**1. Lancer votre serveur** (port 6380) : bouton ▶ de l'IDE sur `Server.main`, ou
 
 ```bash
 mvn compile exec:java
 ```
 
-**3. Parler à un serveur** avec `valkey-cli` :
+Après chaque modification du code, arrêtez le serveur (■) et relancez-le.
+
+Jusqu'à la séance 4, votre serveur ne sert **qu'un client à la fois** : quittez `Cli` avant de lancer `Compare`, sinon `Compare` attend et affiche `(pas de réponse après 3 s)`.
+
+**2. Parler à votre serveur** avec le client fourni, dans un second terminal :
 
 ```bash
-# votre serveur
-docker exec -it ref-valkey valkey-cli -h host.docker.internal -p 6380
-# le serveur de référence
-docker exec -it ref-valkey valkey-cli
-```
-
-Sous Linux, remplacez `host.docker.internal` par l'adresse IP de votre machine, ou lancez le conteneur avec `--network host`.
-Sans `valkey-cli`, utilisez le client fourni, qui s'utilise de la même façon :
-
-```bash
-java tools/Cli.java                              # votre serveur (localhost:6380), Ctrl+D pour quitter
-java tools/Cli.java --server localhost:6379      # le Valkey de référence
+java tools/Cli.java                              # mode interactif sur votre serveur (localhost:6380)
 java tools/Cli.java SET plat "pâtes fraîches"    # une seule commande
 ```
 
-Les guillemets, `\"` et `\r\n` à l'intérieur des guillemets, et les accents sont envoyés correctement. Seule différence d'affichage : `valkey-cli` écrit les accents en octets (`"p\xc3\xa2tes"`), `Cli` les écrit lisiblement.
+```
+localhost:6380> SET nom Ada
+OK
+localhost:6380> GET nom
+"Ada"
+```
+
+Pour quitter : `quit` ou Ctrl+D. Les guillemets, `\"` et `\r\n` à l'intérieur des guillemets, et les accents sont envoyés correctement. `Cli` affiche les réponses comme le vrai `valkey-cli`.
 
 `nc localhost 6380` sert seulement à envoyer des octets bruts (séance 3) : il ne comprend pas les guillemets, et les réponses s'affichent brutes (`+OK`, `$3` puis la valeur).
 
-**4. Comparer votre serveur à Valkey** :
+**3. Comparer votre serveur à Valkey** :
 
 ```bash
 java tools/Compare.java tests/s1.txt
@@ -125,12 +120,33 @@ java tools/Compare.java tests/s1.txt
 21 identiques, 54 différents
 ```
 
+`Compare` envoie chaque commande de `tests/s1.txt` à votre serveur et compare la réponse à celle de Valkey, enregistrée dans `tests/s1.expected`. Il signale d'abord que Valkey n'est pas lancé : c'est normal.
+
 Chaque ligne `✗` est une tâche. Votre objectif : `0 différents`.
 Un `✗` en entraîne parfois d'autres plus bas (une clé mal remplie fausse les commandes suivantes) : corrigez toujours le premier d'abord. Si votre serveur n'est pas lancé, `Compare` le dit et s'arrête.
 
-**Sans Valkey** : si rien n'écoute sur le port 6379, `Compare` le signale et compare votre serveur aux réponses enregistrées dans `tests/s1.expected`. Le résultat est le même. Vous pouvez aussi le forcer avec `--offline`.
+Pour un cas qui n'est pas dans `s1.txt` (une ligne que vous y ajoutez est ignorée, faute de réponse enregistrée) : testez-le dans `CommandProcessorTest`, avec la réponse de la [spécification](specification.md).
 
-**Avec Valkey**, pour tester un cas qui n'est pas dans le fichier, écrivez votre propre fichier de commandes : le format est expliqué en tête de `Compare.java`. Sans Valkey, ce n'est pas possible (aucune réponse enregistrée pour vos commandes, et une ligne ajoutée à `s1.txt` est ignorée) : testez ces cas dans `CommandProcessorTest`, avec les réponses de la [spécification](specification.md).
+## 🔵 Option : le vrai Valkey
+
+Facultatif. Utile pour interroger Valkey sur un cas absent de la spécification, ou pour voir le vrai `valkey-cli` parler à votre serveur.
+
+**Avec Docker** :
+
+```bash
+docker run -d --rm --name ref-valkey -p 6379:6379 valkey/valkey:8   # Valkey sur le port 6379
+docker exec -it ref-valkey valkey-cli                                # parler à Valkey
+docker exec -it ref-valkey valkey-cli -h host.docker.internal -p 6380   # parler à votre serveur
+docker stop ref-valkey                                               # l'arrêter
+```
+
+`valkey-cli` n'existe que dans le conteneur : taper `valkey-cli` directement dans votre terminal donne `command not found`. Sous Linux, remplacez `host.docker.internal` par l'adresse IP de votre machine, ou lancez le conteneur avec `--network host`.
+
+**Sans Docker** : `brew install valkey` sur macOS, `sudo apt install valkey` sur Linux si votre distribution le propose, ou dans WSL sous Windows. Lancez `valkey-server` (port 6379), puis `valkey-cli` et `valkey-cli -p 6380` fonctionnent directement.
+
+`java tools/Cli.java --server localhost:6379` parle aussi à Valkey.
+
+Quand Valkey écoute sur le port 6379, `Compare` l'interroge en direct au lieu de lire `tests/s1.expected`. Le résultat est le même, mais vous pouvez alors écrire votre propre fichier de commandes : le format est expliqué en tête de `Compare.java`.
 
 ## Les niveaux
 

@@ -1333,7 +1333,7 @@ Les étudiants avancés : attaquez les défis pendant que les autres terminent l
 | Le projet | un raccourcisseur de liens | un serveur compatible Redis |
 | On vise | faire passer des tests fournis | répondre exactement comme Valkey |
 | Guidage | pas à pas | des objectifs |
-| Installation | Java et Maven | + Docker conseillé |
+| Installation | Java et Maven | Java et Maven |
 
 **Mêmes notions, même évaluation.** Vous hésitez ? **ShortLink.**
 Le choix se fait aujourd'hui, pour les 4 séances.
@@ -1373,14 +1373,14 @@ Transition vers le TP. ShortLink : la console et le modèle de commande (add) so
 2. **L'ouvrir dans IntelliJ**, puis `mvn test` : `BUILD SUCCESS`.
 3. **Suivre le §0 de l'énoncé** : `tp/<sujet>/enonce/seance1.md`.
 
-**Mini-Redis seulement** : lancer Valkey,
-`docker run -d --rm --name ref-valkey -p 6379:6379 valkey/valkey:8`
-puis ▶ sur `Server.main`, et `java tools/Compare.java tests/s1.txt`.
+**Mini-Redis seulement** : ▶ sur `Server.main`, puis dans le terminal :
+`java tools/Cli.java` (parler au serveur, `quit` pour sortir)
+`java tools/Compare.java tests/s1.txt` (se comparer à Valkey)
 
 <!--
 Durée : 25 min
 ShortLink : mvn test doit afficher 41 tests, 40 skipped. Les « skipped » sont normaux : chaque exercice commence par supprimer un @Disabled.
-Mini-Redis : passer dans les rangs, c'est ici que Docker bloque. Sans Docker : installer Valkey directement (brew install valkey, apt install valkey, ou dans WSL), voir la présentation du TP. En attendant, Compare bascule seul sur les réponses enregistrées (tests/s1.expected) et enonce/specification.md donne toutes les réponses : personne n'est bloqué.
+Mini-Redis : pas de Docker. Compare lit les réponses de Valkey enregistrées (tests/s1.expected) : le message « Valkey non utilisé » est normal. Piège fréquent : Cli encore ouvert pendant Compare. Le serveur ne sert qu'un client à la fois, Compare affiche « pas de réponse après 3 s ». Faire quitter Cli. Docker reste une option (présentation du TP, « Option : le vrai Valkey »).
 Les rapides enchaînent sur le §1 sans attendre.
 -->
 
@@ -1395,7 +1395,7 @@ Reprise : **TP, §1 de l'énoncé**
 
 <!--
 Durée : 15 min
-Rester disponible pour ceux qui bloquent sur Docker ou sur le projet.
+Rester disponible pour ceux qui bloquent sur le projet.
 -->
 
 ---

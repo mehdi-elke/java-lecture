@@ -13,10 +13,10 @@
 1. Ouvrez votre dossier `miniredis` (la copie de `tp/miniredis/starter`, voir la [présentation](00-presentation.md)) dans votre IDE comme projet Maven.
 2. Lancez `mvn test` : les tests fournis passent. Les lignes `WARNING: ... sun.misc.Unsafe ...` affichées par Maven sont normales avec Java 25 : ce ne sont pas des erreurs. Seul `BUILD FAILURE` en est une.
 3. Mettez le projet sous Git tout de suite : dans IntelliJ, **VCS → Enable Version Control Integration → Git**, puis un premier commit « Projet de départ » (⌘K ou Ctrl+K). En terminal : `git init`, `git add .`, `git commit -m "Projet de départ"`. Vous commiterez ensuite après chaque commande.
-4. Lancez le Valkey de référence et votre serveur (voir la [présentation](00-presentation.md)).
-5. Connectez-vous à votre serveur avec `valkey-cli`, tapez `SET nom Ada` puis `GET nom`. Regardez la console de votre serveur : chaque commande reçue s'y affiche.
-6. Tapez `PING`. Votre serveur répond une erreur : `PING` n'existe pas encore.
-7. Lancez `java tools/Compare.java tests/s1.txt` et lisez le résultat.
+4. Lancez votre serveur : ▶ sur `Server.main` (voir la [présentation](00-presentation.md), « Les trois commandes à connaître »).
+5. Dans le terminal d'IntelliJ, connectez-vous à votre serveur avec `java tools/Cli.java`, tapez `SET nom Ada` puis `GET nom`. Regardez la console de votre serveur : chaque commande reçue s'y affiche.
+6. Tapez `PING`. Votre serveur répond une erreur : `PING` n'existe pas encore. Quittez `Cli` avec `quit`.
+7. Lancez `java tools/Compare.java tests/s1.txt` et lisez le résultat. Le message « Valkey non utilisé » est normal : `Compare` lit les réponses de Valkey enregistrées dans `tests/s1.expected`.
 
 Lisez ensuite `CommandProcessor.java` en entier. Repérez :
 
@@ -28,7 +28,7 @@ Les données sont dans une `Map<String, String>` : la clé Redis, et sa valeur.
 
 ## Méthode pour chaque commande
 
-1. **Demandez à Valkey** ce qu'il répond, cas normaux et cas d'erreur (`valkey-cli` sur le port 6379). Sans Valkey : la [spécification](specification.md).
+1. **Cherchez ce que répond Valkey**, cas normaux et cas d'erreur : la [spécification](specification.md), ou `tests/s1.expected` (la commande, `=>`, la réponse exacte). Si vous avez installé Valkey (facultatif) : demandez-lui.
 2. **Écrivez le test** dans `CommandProcessorTest`, avec la réponse exacte de Valkey :
    ```java
    @Test
@@ -40,9 +40,9 @@ Les données sont dans une `Map<String, String>` : la clé Redis, et sa valeur.
 4. `mvn test`, puis relancez le serveur et `Compare`.
 5. Commit.
 
-Pour savoir quel type de `Reply` utiliser, regardez comment `valkey-cli` affiche la réponse :
+Pour savoir quel type de `Reply` utiliser, regardez comment la réponse s'affiche (dans `Cli`, `Compare`, la spécification ou `valkey-cli`, c'est le même affichage) :
 
-| `valkey-cli` affiche | Vous renvoyez |
+| Affiché | Vous renvoyez |
 |---|---|
 | `PONG` ou `OK` (sans guillemets) | `new Reply.Simple("PONG")` ou `Reply.OK` |
 | `"salut"` (avec guillemets) | `new Reply.Bulk("salut")` |
