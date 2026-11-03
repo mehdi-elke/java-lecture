@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** §1 Codes.isValid. */
-@Disabled("§1 : supprimez cette ligne quand vous commencez l'exercice")
 class CodesIsValidTest {
 
     @Test

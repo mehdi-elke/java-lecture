@@ -21,7 +21,16 @@ public final class Codes {
      * {@link #ALPHABET}. {@code null} n'est pas valide.
      */
     public static boolean isValid(String code) {
-        throw new UnsupportedOperationException("§1 : à écrire");
+        if (code == null || code.length() < MIN_LENGTH || code.length() > MAX_LENGTH) {
+            return false;
+        }
+        for (int i = 0; i < code.length(); i++) {
+            char c = code.charAt(i);
+            if (ALPHABET.indexOf(c) == -1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
